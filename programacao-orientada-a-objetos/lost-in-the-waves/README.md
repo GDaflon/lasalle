@@ -8,9 +8,9 @@ Uma onda derruba a surfista, que perde a costa de vista e precisa atravessar o o
   <img src="docs/gameplay.gif" alt="Trecho de uma partida" width="560">
 </p>
 
-| | |
+| Trabalho | G2 de Programação Orientada a Objetos |
 | --- | --- |
-| **Disciplina** | Programação Orientada a Objetos (SII1P0504N0001) · Trabalho G2 |
+| **Disciplina** | Programação Orientada a Objetos (SII1P0504N0001) |
 | **Curso** | Sistemas de Informação · Unilasalle-RJ |
 | **Professor** | Jota Pê |
 | **Aluno** | Guilherme Daflon Goulart Costa |
@@ -18,13 +18,11 @@ Uma onda derruba a surfista, que perde a costa de vista e precisa atravessar o o
 **Vídeos:** [partida completa, 3 fases (~2min40)](docs/videos/demo_lost_in_the_waves.mp4) · [destaques em 40 s](docs/videos/destaques_40s.mp4)<br>
 **Documentos:** [documento de entrega](docs/entrega/documento-de-entrega.pdf) · [apresentação](docs/entrega/apresentacao.pdf)
 
-![Tela principal](docs/print_tela_principal.png)
-
 ## Como executar
 
 ### Eclipse (com WindowBuilder)
 
-1. `File > Import > General > Existing Projects into Workspace` e selecione a pasta `LostInTheWaves`.
+1. `File > Import > General > Existing Projects into Workspace` e selecione a pasta `lost-in-the-waves`.
 2. Execute `src/app/Main.java` (`Run As > Java Application`).
 3. Para editar a tela no WindowBuilder: botão direito em `src/view/TelaPrincipal.java` >
    `Open With > WindowBuilder Editor` > aba **Design**.
@@ -79,6 +77,13 @@ O menu **Ajuda** mostra os controles e os créditos.
   A colisão agachada é mais baixa, e a de pé vai até o topo da cabeça.
 - Prólogo animado em 3 cenas: a surfista no mar, a onda gigante que a derruba (ela gira
   no ar e a prancha voa longe) e ela nadando de volta e subindo na prancha.
+
+## Telas
+
+<p align="center">
+  <img src="docs/menu.png" alt="Menu inicial" width="420">
+  <img src="docs/print_tela_principal.png" alt="Partida em andamento" width="420">
+</p>
 
 ## Estrutura (MVC)
 
