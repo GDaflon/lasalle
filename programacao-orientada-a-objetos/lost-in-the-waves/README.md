@@ -24,7 +24,7 @@ Uma onda derruba a surfista, que perde a costa de vista e precisa atravessar o o
 | Raquel Rodrigues Alves | 1015562 |
 
 **Vídeos:** [partida completa, 3 fases (~2min40)](docs/videos/demo_lost_in_the_waves.mp4) · [destaques em 40 s](docs/videos/destaques_40s.mp4)<br>
-**Documentos:** [documento de entrega](docs/entrega/documento-de-entrega.pdf) · apresentação em [PDF](docs/entrega/apresentacao.pdf) e [PowerPoint](docs/entrega/apresentacao.pptx)
+**Documentos:** [POO (SII1P0504N0001) G2 - Lost in the Waves.pdf](<docs/entrega/POO (SII1P0504N0001) G2 - Lost in the Waves.pdf>) (documento de entrega) · apresentação em [PDF](docs/entrega/apresentacao.pdf) e [PowerPoint](docs/entrega/apresentacao.pptx)
 
 ## Como executar
 
