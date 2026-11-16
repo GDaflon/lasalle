@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Artigo sobre o atendimento por redes de água e esgoto no Brasil, com análise de dados abertos do SINISA 2025, ano de referência 2024.">
   <meta name="author" content="Guilherme Daflon Goulart Costa e Marcella Guimaraes Rodrigues Da Silva">
-  <meta name="keywords" content="saneamento básico, abastecimento de água, esgotamento sanitário, desigualdade territorial, SINISA">
+  <meta name="keywords" content="saneamento básico, abastecimento de água, esgotamento sanitário, desigualdade territorial, SINISA, dados abertos">
   <meta name="theme-color" content="#123e43">
   <link rel="stylesheet" href="assets/artigo.css">
   <title>Atendimento por redes de água e esgoto no Brasil em 2024</title>
@@ -16,14 +16,16 @@
     <div class="largura">
       <p class="edicao">Projeto Prático G2 · Linguagens de Programação · 2026.2</p>
       <h1>Atendimento por redes de água e esgoto no Brasil em 2024</h1>
+      <p class="subtitulo">Diferenças entre regiões, entre o urbano e o rural e entre municípios, a partir dos dados abertos do SINISA</p>
       <p class="autoria">Guilherme Daflon Goulart Costa<br>Marcella Guimaraes Rodrigues Da Silva</p>
-      <p class="filiacao">Centro Universitário La Salle do Rio de Janeiro · Sistemas de Informação, 6º período<br>Professor Alexandre Neves Louzada</p>
+      <p class="filiacao">Centro Universitário La Salle do Rio de Janeiro · Bacharelado em Sistemas de Informação, 6º período<br>Disciplina Linguagens de Programação · Professor Alexandre Neves Louzada</p>
       <div class="links-capa">
         <a class="botao" href="https://github.com/GDaflon/lasalle/tree/main/linguagens-de-programacao/projeto-saneamento-sinisa">Código e dados no GitHub</a>
         <a class="botao secundario" href="https://colab.research.google.com/github/GDaflon/lasalle/blob/main/linguagens-de-programacao/projeto-saneamento-sinisa/notebooks/analise_exploratoria.ipynb">Abrir notebook no Colab</a>
+        <a class="botao secundario" href="https://github.com/GDaflon/lasalle/blob/main/linguagens-de-programacao/projeto-saneamento-sinisa/data/data_dictionary.md">Dicionário de dados</a>
       </div>
       <ul class="metadados" aria-label="Metadados do estudo">
-        <li>SINISA 2025</li><li>Referência 2024</li><li>27 UFs</li>
+        <li>SINISA 2025</li><li>Referência 2024</li><li>5.149 municípios</li><li>27 UFs</li><li>Python 3.12</li><li>Código MIT</li><li>Texto CC BY 4.0</li>
       </ul>
     </div>
   </header>
@@ -35,7 +37,14 @@
         <li><a href="#resumo">Resumo</a></li>
         <li><a href="#introducao">1. Introdução</a></li>
         <li><a href="#metodo">2. Metodologia</a></li>
-        <li><a href="#resultados">3. Resultados e discussão</a></li>
+        <li><a href="#resultados">3. Resultados e discussão</a>
+          <ul>
+            <li><a href="#rq1">RQ1 · Regiões e UFs</a></li>
+            <li><a href="#rq2">RQ2 · Urbano e rural</a></li>
+            <li><a href="#rq3">RQ3 · Municípios</a></li>
+            <li><a href="#sintese">Síntese</a></li>
+          </ul>
+        </li>
         <li><a href="#conclusao">4. Conclusão</a></li>
         <li><a href="#fair">5. Dados e declaração FAIR</a></li>
         <li><a href="#referencias">6. Referências</a></li>
@@ -45,110 +54,407 @@
     <main id="conteudo">
       <section id="resumo" aria-labelledby="titulo-resumo">
         <h2 id="titulo-resumo">Resumo</h2>
-        <p>O abastecimento de água e a coleta de esgoto são serviços complementares, mas o atendimento por rede varia de forma desigual no Brasil. Este estudo compara os indicadores do Sistema Nacional de Informações em Saneamento Básico (SINISA 2025), ano de referência 2024, em três escalas: macrorregiões e unidades federativas, áreas urbanas e rurais e municípios. Foram utilizadas quatro planilhas oficiais. A rotina em Python padronizou os campos, registrou valores não calculados e cruzou os municípios por código IBGE. No consolidado nacional, a rede de água atendeu 84,14% da população de referência do módulo e a rede de esgoto, 62,30% da população de referência do seu módulo. O Norte apresentou a maior diferença regional entre as duas taxas, de 38,16 pontos percentuais. No recorte rural nacional, os percentuais foram 22,88% para água e 4,75% para esgoto. Em 2.710 municípios com ambos os indicadores totais válidos, a diferença mediana foi de 10,82 pontos percentuais, e o coeficiente de Pearson foi de 0,493. As diferenças mostram onde o atendimento por redes se distancia mais, observadas a participação desigual dos municípios e a exclusão de soluções alternativas do recorte.</p>
-        <p class="palavras"><strong>Palavras-chave</strong> — saneamento básico, abastecimento de água, esgotamento sanitário, desigualdade territorial, SINISA.</p>
+        <p>O acesso à água por rede e a coleta de esgoto avançam em ritmos diferentes no Brasil, e a legislação fixa metas de 99% e 90% de atendimento até 2033. Este estudo compara os dois indicadores do Sistema Nacional de Informações em Saneamento Básico (SINISA 2025, ano de referência 2024) em três escalas: macrorregiões e unidades federativas, áreas urbanas e rurais e municípios. Um pipeline em Python com pandas lê quatro planilhas oficiais, valida os arquivos por hash, registra os valores não calculados sem imputá-los e cruza os municípios pelo código IBGE. No consolidado nacional, a rede de água atende 84,14% da população de referência e a de esgoto, 62,30%, diferença de 21,84 pontos percentuais. A diferença chega a 38,16 pontos no Norte e a 62,00 no Amapá. Nenhuma unidade federativa alcança 99% em água, e só São Paulo e o Distrito Federal passam de 90% em esgoto. No meio rural, a coleta por rede fica abaixo de 5% em 21 unidades federativas. Entre 2.710 municípios com os dois indicadores válidos, a diferença mediana é de 10,82 pontos, com desvio-padrão de 26,42 e correlação de Pearson de 0,493. Em 334 municípios o esgoto supera a água, e em 73,7% deles os dois serviços têm prestadores de naturezas distintas. A amostra pareada concentra-se no Sudeste, o que limita a generalização dos resultados municipais.</p>
+        <p class="palavras"><strong>Palavras-chave</strong> — saneamento básico, abastecimento de água, esgotamento sanitário, desigualdade territorial, SINISA, dados abertos.</p>
+        <ul class="destaques" aria-label="Números principais">
+          <li><strong>21,84 p.p.</strong><span>separam água (84,14%) e esgoto (62,30%) no Brasil</span></li>
+          <li><strong>0 de 27</strong><span>UFs alcançam 99% em água; duas passam de 90% em esgoto</span></li>
+          <li><strong>4,75%</strong><span>é o atendimento rural por rede de esgoto no país</span></li>
+          <li><strong>2.710</strong><span>municípios têm os dois indicadores válidos, 53,1% deles no Sudeste</span></li>
+        </ul>
       </section>
 
       <section id="introducao" aria-labelledby="titulo-intro">
         <h2 id="titulo-intro">1. Introdução</h2>
-        <p>Ter acesso à água por rede e contar com coleta de esgoto são dimensões complementares do saneamento. Examinar uma taxa isolada pode esconder diferenças entre serviços e entre territórios. O SINISA publica indicadores que permitem comparar essas dimensões com recortes definidos de população e território. Neste trabalho, analisamos o atendimento por redes no ano de referência 2024.</p>
+        <p>Água tratada na torneira e esgoto coletado são serviços que deveriam chegar juntos. Quando a rede de água chega e a de esgoto não, o volume consumido volta ao ambiente sem coleta, com efeitos sobre a saúde da população e a qualidade dos rios. No Brasil, as duas redes não cresceram no mesmo passo, e a distância entre elas muda bastante de um lugar para outro.</p>
+        <p>O tema tem prazo legal. A Lei nº 14.026/2020 atualizou o marco do saneamento e incluiu na Lei nº 11.445/2007 metas de universalização: 99% da população com água potável e 90% com coleta e tratamento de esgotos até 31 de dezembro de 2033 (BRASIL, 2007; BRASIL, 2020). O Objetivo de Desenvolvimento Sustentável 6 da Agenda 2030 aponta na mesma direção (NAÇÕES UNIDAS, 2015). Saber onde os dois serviços estão mais afastados ajuda a enxergar onde o esforço até 2033 será maior.</p>
+        <p>O Sistema Nacional de Informações em Saneamento Básico (SINISA), do Ministério das Cidades, sucedeu o SNIS e publica dados abertos por município, UF, macrorregião e Brasil (BRASIL, 2025a). Uma taxa nacional isolada esconde três diferenças que esses dados permitem medir: entre territórios, entre áreas urbanas e rurais e entre municípios de uma mesma região. Este trabalho mede as três com um pipeline reproduzível em Python, publicado segundo os princípios FAIR (WILKINSON et al., 2016).</p>
+        <p>As perguntas de pesquisa são:</p>
         <ol class="perguntas">
           <li><strong>RQ1</strong> — Como a diferença entre os indicadores totais de água e esgoto varia entre macrorregiões e UFs?</li>
           <li><strong>RQ2</strong> — Quanto o atendimento urbano difere do rural em cada serviço?</li>
           <li><strong>RQ3</strong> — Nos municípios com ambos os indicadores válidos, qual é a dispersão das diferenças e como os dois indicadores se associam?</li>
         </ol>
+        <p>A Seção 2 descreve a fonte, o tratamento dos dados e os métodos. A Seção 3 responde a cada pergunta com tabelas e figuras, duas delas interativas. A Seção 4 reúne conclusões, limites e próximos passos. A Seção 5 traz a declaração FAIR e os comandos para reproduzir tudo.</p>
       </section>
 
       <section id="metodo" aria-labelledby="titulo-metodo">
         <h2 id="titulo-metodo">2. Metodologia e pipeline de dados</h2>
-        <p>A fonte é a publicação SINISA 2025 do Ministério das Cidades, com dados de 2024. Foram usadas as planilhas municipais de água (retificação de maio de 2026) e esgoto, além dos respectivos consolidados oficiais por UF, macrorregião e Brasil. Os códigos IAG0001–IAG0003 e IES0001–IES0003 correspondem ao atendimento da população total, urbana e rural em cada serviço.</p>
-        <p>A rotina usa pandas para ler os XLSX e localizar o cabeçalho pelos códigos de indicador. O código IBGE é mantido como texto de sete dígitos. Percentuais são convertidos em números de 0 a 100. Marcadores de divisão por zero e condições não atendidas são registrados na auditoria e convertidos em campos vazios nos CSVs. Zeros numéricos permanecem válidos.</p>
-        <p>A união por código IBGE preserva os registros exclusivos de cada módulo. Dos 5.149 códigos na união, 2.744 aparecem nas duas planilhas, e 2.710 têm os dois indicadores totais válidos. A dispersão e as correlações usam esses pares. Nos consolidados, a chave combina nível, sigla e território para distinguir, por exemplo, Sergipe de Sudeste.</p>
-        <p>O trecho de <code>src/etl.py</code> mostra o cruzamento e a diferença em pontos percentuais.</p>
-        <pre><code>pares = agua.merge(esgoto, on="ibge", how="outer",
-                   suffixes=("_agua", "_esgoto"),
-                   indicator="presenca", validate="one_to_one")
-pares["diferenca_total_pp"] = (
-    pares["agua_total_pct"] - pares["esgoto_total_pct"]
-)</code></pre>
+
+        <h3>2.1 Fonte e granularidade</h3>
+        <p>A fonte primária é a publicação <cite>Resultados SINISA 2025</cite>, com dados do ano de 2024 (BRASIL, 2025a). Foram usadas quatro planilhas XLSX dos módulos Abastecimento de Água e Esgotamento Sanitário: as duas bases municipais e os dois consolidados oficiais por UF, macrorregião e Brasil. A planilha municipal de água é a versão retificada em 25 de maio de 2026. Cada linha das bases municipais é um município. Cada linha dos consolidados é um território: 27 UFs, cinco macrorregiões e o Brasil.</p>
+        <div class="rolagem">
+          <table>
+            <caption><strong>Tabela 1.</strong> Planilhas de origem e situação do indicador de atendimento total em cada uma.</caption>
+            <thead><tr><th scope="col">Planilha</th><th scope="col">Arquivo em data/raw</th><th scope="col">Linhas</th><th scope="col">Indicador total válido</th><th scope="col">Não calculado</th><th scope="col">Zeros válidos</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Água · municípios (retificada)</th><td><code>agua_municipal.xlsx</code></td><td>5.144</td><td>5.118</td><td>26</td><td>33</td></tr>
+              <tr><th scope="row">Esgoto · municípios</th><td><code>esgoto_municipal.xlsx</code></td><td>2.749</td><td>2.728</td><td>21</td><td>5</td></tr>
+              <tr><th scope="row">Água · UF, região e Brasil</th><td><code>agua_uf.xlsx</code></td><td>33</td><td>33</td><td>0</td><td>0</td></tr>
+              <tr><th scope="row">Esgoto · UF, região e Brasil</th><td><code>esgoto_uf.xlsx</code></td><td>33</td><td>33</td><td>0</td><td>0</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>A base de esgoto tem pouco mais da metade dos municípios da base de água (2.749 contra 5.144). Essa diferença de cobertura entre os módulos condiciona toda a análise municipal e é tratada na Seção 2.4.</p>
+
+        <h3>2.2 Indicadores</h3>
+        <p>Usamos seis indicadores de atendimento, três por serviço. Todos são razões entre população atendida por rede e população residente do recorte, em porcentagem (BRASIL, 2025b; BRASIL, 2025c).</p>
+        <div class="rolagem">
+          <table>
+            <caption><strong>Tabela 2.</strong> Indicadores lidos das planilhas e métricas derivadas.</caption>
+            <thead><tr><th scope="col">Coluna</th><th scope="col">Código SINISA</th><th scope="col">O que mede</th></tr></thead>
+            <tbody>
+              <tr><th scope="row"><code>agua_total_pct</code></th><td>IAG0001</td><td>População total atendida por rede de água (%)</td></tr>
+              <tr><th scope="row"><code>agua_urbana_pct</code></th><td>IAG0002</td><td>População urbana atendida por rede de água (%)</td></tr>
+              <tr><th scope="row"><code>agua_rural_pct</code></th><td>IAG0003</td><td>População rural atendida por rede de água (%)</td></tr>
+              <tr><th scope="row"><code>esgoto_total_pct</code></th><td>IES0001</td><td>População total atendida por rede coletora de esgoto (%)</td></tr>
+              <tr><th scope="row"><code>esgoto_urbana_pct</code></th><td>IES0002</td><td>População urbana atendida por rede coletora (%)</td></tr>
+              <tr><th scope="row"><code>esgoto_rural_pct</code></th><td>IES0003</td><td>População rural atendida por rede coletora (%)</td></tr>
+              <tr><th scope="row"><code>esgoto_tratado_pct</code></th><td>IES2004</td><td>Esgoto tratado em relação ao coletado (%), só nos consolidados</td></tr>
+              <tr><th scope="row"><code>diferenca_total_pp</code></th><td>derivada</td><td>Água total − esgoto total, em pontos percentuais</td></tr>
+              <tr><th scope="row"><code>hiato_agua_pp</code>, <code>hiato_esgoto_pp</code></th><td>derivadas</td><td>Urbano − rural em cada serviço, em pontos percentuais</td></tr>
+            </tbody>
+          </table>
+        </div>
         <aside class="nota">
           <strong>Como ler a diferença</strong>
-          <p>A diferença subtrai as taxas publicadas. Os módulos usam universos de referência distintos, especialmente nos consolidados. O resultado expressa uma distância entre percentuais e não a proporção de pessoas que têm água e ficaram sem esgoto.</p>
+          <p>A diferença subtrai duas taxas publicadas. Os módulos têm populações de referência distintas, então o resultado mede a distância entre percentuais. Ele não diz quantas pessoas têm água e estão sem esgoto. As metas legais de 99% e 90% entram como régua de comparação: a meta de esgoto soma coleta e tratamento, e os indicadores deste estudo medem só o atendimento por rede.</p>
         </aside>
+
+        <h3>2.3 Pipeline e tratamento</h3>
+        <p>O pipeline tem três etapas, cada uma em um arquivo. Tudo roda em Python 3.12 com pandas 2.3.3, NumPy, Matplotlib e Plotly, em versões fixadas no <code>requirements.txt</code> (MCKINNEY, 2010; HARRIS et al., 2020; HUNTER, 2007).</p>
+        <ol class="etapas">
+          <li><strong>Ingestão e limpeza</strong> — <code>src/etl.py</code> confere o hash SHA-256 de cada XLSX, lê as abas de indicadores, trata ausências e tipos, cruza os módulos e grava <code>data/processed/</code> em CSV e Parquet, com um registro de auditoria em JSON. Se uma planilha faltar, o script baixa o pacote do portal oficial.</li>
+          <li><strong>Estatísticas e figuras</strong> — <code>src/analise.py</code> calcula as medidas descritivas e gera as cinco figuras estáticas e as duas interativas em <code>docs/assets/</code>.</li>
+          <li><strong>Exploração</strong> — <code>notebooks/analise_exploratoria.ipynb</code> executa as duas etapas e mostra cada tabela e gráfico na ordem das perguntas de pesquisa.</li>
+        </ol>
+        <p>As planilhas trazem linhas de título antes da tabela, e a posição do cabeçalho muda entre os módulos. O script localiza o cabeçalho pela linha que contém os códigos dos indicadores. Assim a leitura não depende de um número de linha fixo.</p>
+        <pre><code># src/etl.py · localiza o cabeçalho e separa ausências de valores inválidos
+candidatos = origem.index[origem.apply(lambda linha: set(colunas).issubset(linha.values), axis=1)]
+if len(candidatos) != 1:
+    raise ValueError(f"Cabeçalho não identificado de forma única: {caminho.name}")
+
+original = tabela[coluna].astype("string").str.strip()
+ausente = original.isna() | original.eq("") | original.isin(MARCADORES)
+numero = pd.to_numeric(original.mask(ausente), errors="coerce")
+invalidos = (~ausente &amp; numero.isna()) | (numero.notna() &amp; ~numero.between(0, 100))
+if invalidos.any():
+    raise ValueError(f"Valores inesperados em {caminho.name}/{coluna}")</code></pre>
+        <div class="rolagem">
+          <table class="texto">
+            <caption><strong>Tabela 3.</strong> Decisões de tratamento e onde cada uma fica rastreável.</caption>
+            <thead><tr><th scope="col">Aspecto</th><th scope="col">Decisão</th><th scope="col">Rastreabilidade</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Codificação</th><td>Leitura dos XLSX com openpyxl, sem conversão automática de tipos. Saídas em UTF-8.</td><td>Hash SHA-256 de cada arquivo bruto no código e na auditoria</td></tr>
+              <tr><th scope="row">Valores ausentes</th><td>Os textos "Não calculado (condições não atendidas)" e "Não calculado (divisão por zero)" viram ausente. Nada é imputado. Cada análise usa os registros válidos para ela.</td><td>Contagem por marcador em <code>auditoria.json</code></td></tr>
+              <tr><th scope="row">Zeros</th><td>Zero publicado é valor válido e permanece.</td><td>Contagem de zeros em <code>auditoria.json</code></td></tr>
+              <tr><th scope="row">Tipos</th><td>Código IBGE como texto de sete dígitos. Percentuais como decimal de 0 a 100. Capital como booleano.</td><td>Erro se houver código duplicado ou valor fora da faixa</td></tr>
+              <tr><th scope="row">Chaves</th><td>Município por código IBGE. Território por nível e sigla, pois "SE" é Sergipe e também Sudeste.</td><td><code>validate="one_to_one"</code> nos cruzamentos</td></tr>
+              <tr><th scope="row">Métricas derivadas</th><td>Diferença água − esgoto, hiatos urbano − rural, natureza do prestador reduzida a uma categoria.</td><td>Fórmulas no dicionário de dados</td></tr>
+              <tr><th scope="row">Persistência</th><td>CSV para leitura direta e Parquet para preservar os tipos.</td><td>Mesmas linhas e colunas nos dois formatos</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Não imputamos valores porque um percentual de atendimento estimado pela mediana da região criaria municípios fictícios justamente onde os dados são mais escassos. O cruzamento dos módulos preserva todos os códigos e marca a origem de cada linha, sem descartar nada.</p>
+        <pre><code># src/etl.py · união externa por código IBGE, com a origem de cada registro
+pares = agua.merge(esgoto, on="ibge", how="outer", suffixes=("_agua", "_esgoto"),
+                   indicator="presenca", validate="one_to_one")
+pares["diferenca_total_pp"] = pares["agua_total_pct"] - pares["esgoto_total_pct"]</code></pre>
+
+        <h3>2.4 Amostra pareada e viés de seleção</h3>
+        <p>A união das duas bases tem 5.149 códigos IBGE. Destes, 2.744 aparecem nos dois módulos, 2.400 só em água e 5 só em esgoto. Os 2.710 municípios com os dois indicadores totais válidos formam a <strong>amostra pareada</strong> usada na RQ3. Ela cobre 52,6% da união, com forte desequilíbrio regional (Figura 1): 88,5% dos municípios do Sudeste entram na comparação, contra 15,8% dos do Norte.</p>
+        <figure>
+          <img src="assets/cobertura.png" width="1655" height="648" loading="lazy" alt="Barras empilhadas por região. Sudeste: 1.439 pares de 1.626 municípios. Norte: 62 de 393. Nordeste: 573 de 1.528. Sul: 444 de 1.158. Centro-Oeste: 192 de 444.">
+          <figcaption><strong>Figura 1.</strong> Municípios de cada região na união das bases e parcela com os dois indicadores válidos. Fonte: elaboração própria com dados do SINISA 2025 (ref. 2024).</figcaption>
+        </figure>
+        <p>A seleção não é aleatória. Entre os municípios com indicador de água válido, a mediana do atendimento é de 81,4% nos que entram na amostra pareada e de 62,7% nos que ficam de fora. Os municípios sem registro de esgoto tendem a ter também menos rede de água. Por isso os resultados municipais descrevem o conjunto observado e provavelmente subestimam as diferenças do país. As perguntas RQ1 e RQ2 usam os consolidados oficiais e não dependem dessa amostra.</p>
+
+        <h3>2.5 Medidas estatísticas</h3>
+        <p>A tendência central é descrita pela mediana, menos sensível a valores extremos que a média. A dispersão é descrita pelos quartis, pelo intervalo interquartil (IQR) e pelo desvio-padrão. Valores abaixo de Q1 − 1,5 × IQR ou acima de Q3 + 1,5 × IQR são sinalizados como extremos, pelo critério de Tukey (1977). A associação entre os indicadores é medida pelo coeficiente de Pearson (linear) e pelo de Spearman (por postos). Todas as medidas são descritivas. Não há teste de hipótese nem afirmação de causa.</p>
+        <pre><code># src/analise.py · limites do critério de Tukey para a diferença municipal
+def limites_iqr(diferenca):
+    q1, q3 = diferenca.quantile([0.25, 0.75])
+    iqr = q3 - q1
+    return q1 - 1.5 * iqr, q3 + 1.5 * iqr</code></pre>
       </section>
 
       <section id="resultados" aria-labelledby="titulo-resultados">
         <h2 id="titulo-resultados">3. Resultados e discussão</h2>
 
-        <h3>RQ1 · Diferenças entre regiões e UFs</h3>
-        <p>A diferença nacional foi de <strong>21,84 p.p.</strong> O Norte teve o maior valor regional (38,16 p.p.), seguido do Nordeste (37,80 p.p.). A comparação com o Sudeste (10,17 p.p.) mostra que um valor nacional único encobre situações distintas. No Norte, o indicador de esgoto foi 24,65%, ante 81,94% no Sudeste.</p>
+        <h3 id="rq1">RQ1 · Diferenças entre regiões e UFs</h3>
+        <p>No Brasil, a rede de água atende 84,14% da população e a de esgoto, 62,30%. A diferença nacional é de <strong>21,84 p.p.</strong>, mas nenhuma região fica perto desse valor (Figura 2 e Tabela 4). Norte (38,16 p.p.) e Nordeste (37,80 p.p.) têm as maiores distâncias, e o Sudeste (10,17 p.p.), a menor. O Sul aparece em terceiro lugar, com 30,60 p.p.: tem água acima da taxa nacional (88,32%) e esgoto abaixo dela (57,72%).</p>
         <figure>
-          <img src="assets/regioes.png" width="1656" height="864" loading="lazy" alt="Gráfico de barras dos indicadores totais. O Norte tem 62,81% em água e 24,65% em esgoto. O Sudeste tem 92,11% em água e 81,94% em esgoto.">
-          <figcaption><strong>Figura 1.</strong> Atendimento da população total por rede de água e de esgoto. Fonte: consolidados SINISA 2025 (ref. 2024).</figcaption>
+          <img src="assets/regioes.png" width="1655" height="864" loading="lazy" alt="Gráfico de barras dos indicadores totais. O Norte tem 62,81% em água e 24,65% em esgoto. O Sudeste tem 92,11% em água e 81,94% em esgoto.">
+          <figcaption><strong>Figura 2.</strong> Atendimento da população total por rede de água e de esgoto no Brasil e nas macrorregiões. Fonte: consolidados SINISA 2025 (ref. 2024).</figcaption>
         </figure>
-        <p>Entre as UFs, o Amapá teve a maior diferença, <strong>62,00 p.p.</strong> (71,29% em água e 9,29% em esgoto). São Paulo teve a menor, <strong>4,08 p.p.</strong> (97,36% e 93,28%). A leitura conjunta dos dois percentuais evita confundir uma diferença pequena com atendimento alto.</p>
-        <details>
-          <summary>Ver percentuais do Brasil e das macrorregiões</summary>
+        <div class="rolagem">
           <table>
-            <thead><tr><th scope="col">Território</th><th scope="col">Água (%)</th><th scope="col">Esgoto (%)</th><th scope="col">Diferença (p.p.)</th></tr></thead>
+            <caption><strong>Tabela 4.</strong> Indicadores totais, diferença e parcela do esgoto coletado que é tratada.</caption>
+            <thead><tr><th scope="col">Território</th><th scope="col">Água (%)</th><th scope="col">Esgoto (%)</th><th scope="col">Diferença (p.p.)</th><th scope="col">Esgoto tratado ÷ coletado (%)</th></tr></thead>
             <tbody>
-              <tr><th scope="row">Brasil</th><td>84,14</td><td>62,30</td><td>21,84</td></tr>
-              <tr><th scope="row">Norte</th><td>62,81</td><td>24,65</td><td>38,16</td></tr>
-              <tr><th scope="row">Nordeste</th><td>73,70</td><td>35,90</td><td>37,80</td></tr>
-              <tr><th scope="row">Sudeste</th><td>92,11</td><td>81,94</td><td>10,17</td></tr>
-              <tr><th scope="row">Sul</th><td>88,32</td><td>57,72</td><td>30,60</td></tr>
-              <tr><th scope="row">Centro-Oeste</th><td>89,71</td><td>68,31</td><td>21,40</td></tr>
+              <tr><th scope="row">Brasil</th><td>84,14</td><td>62,30</td><td>21,84</td><td>85,16</td></tr>
+              <tr><th scope="row">Norte</th><td>62,81</td><td>24,65</td><td>38,16</td><td>90,64</td></tr>
+              <tr><th scope="row">Nordeste</th><td>73,70</td><td>35,90</td><td>37,80</td><td>81,36</td></tr>
+              <tr><th scope="row">Sudeste</th><td>92,11</td><td>81,94</td><td>10,17</td><td>82,76</td></tr>
+              <tr><th scope="row">Sul</th><td>88,32</td><td>57,72</td><td>30,60</td><td>94,64</td></tr>
+              <tr><th scope="row">Centro-Oeste</th><td>89,71</td><td>68,31</td><td>21,40</td><td>95,58</td></tr>
             </tbody>
           </table>
+        </div>
+        <p>Entre as UFs, a diferença vai de <strong>4,08 p.p.</strong> em São Paulo a <strong>62,00 p.p.</strong> no Amapá, com mediana de 33,58 p.p. e desvio-padrão de 15,56 p.p. (Figura 3). A mediana das UFs fica acima da diferença nacional porque o consolidado do país é puxado pelas UFs mais populosas, que têm diferenças menores. Santa Catarina tem a segunda maior distância do país (53,67 p.p.), com 89,56% em água e 35,89% em esgoto.</p>
+        <figure>
+          <iframe class="alto" src="assets/ufs.html" title="Gráfico interativo com os indicadores de água e esgoto das 27 UFs" loading="lazy"></iframe>
+          <figcaption><strong>Figura 3 (interativa).</strong> Cada linha liga o indicador de esgoto (quadrado) ao de água (círculo) de uma UF. O comprimento é a diferença em pontos percentuais. Use o menu para reordenar por diferença, água, esgoto ou região, e passe o cursor para ver os valores. As linhas pontilhadas marcam as metas de 2033. <a href="assets/ufs.html">Abrir em página própria</a>.</figcaption>
+        </figure>
+        <p>A Figura 3 mostra por que a diferença precisa ser lida junto com o nível das taxas. Uma diferença pequena pode significar dois serviços altos, como em São Paulo (97,36% e 93,28%), ou dois serviços ainda distantes da universalização, como na Paraíba (59,45% e 38,61%, diferença de 20,84 p.p.). No Acre, a diferença de 33,23 p.p. fica perto da mediana, mas o estado tem a menor taxa de água do país (44,27%) e a segunda menor de esgoto (11,04%).</p>
+        <p>Em relação às metas de 2033, <strong>nenhuma UF alcança 99% em água</strong>. As mais próximas são o Distrito Federal (97,45%) e São Paulo (97,36%). Em esgoto, só essas duas passam de 90% (91,77% e 93,28%), e 15 das 27 UFs estão abaixo de 50%. A correlação de Pearson entre os dois indicadores nas UFs é de 0,760: quem tem mais água tende a ter mais esgoto, mas a rede de esgoto parte de um patamar bem inferior.</p>
+        <p>A comparação com a meta de esgoto é otimista por construção. A lei exige coleta e tratamento, e do esgoto coletado no país 85,16% é tratado (Tabela 4). Minas Gerais ilustra o ponto: tem a terceira maior taxa de coleta (78,43%), e trata 62,04% do que coleta.</p>
+        <details>
+          <summary>Ver os indicadores das 27 UFs e a distância até as metas (Tabela 5)</summary>
+          <div class="rolagem">
+            <table>
+              <caption><strong>Tabela 5.</strong> UFs em ordem decrescente de diferença. As duas últimas colunas mostram quantos pontos faltam para 99% em água e 90% em esgoto.</caption>
+              <thead><tr><th scope="col">UF</th><th scope="col">Região</th><th scope="col">Água (%)</th><th scope="col">Esgoto (%)</th><th scope="col">Diferença (p.p.)</th><th scope="col">Falta para 99% (p.p.)</th><th scope="col">Falta para 90% (p.p.)</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Amapá</th><td>Norte</td><td>71,29</td><td>9,29</td><td>62,00</td><td>27,71</td><td>80,71</td></tr>
+              <tr><th scope="row">Santa Catarina</th><td>Sul</td><td>89,56</td><td>35,89</td><td>53,67</td><td>9,44</td><td>54,11</td></tr>
+              <tr><th scope="row">Alagoas</th><td>Nordeste</td><td>73,27</td><td>22,32</td><td>50,95</td><td>25,73</td><td>67,68</td></tr>
+              <tr><th scope="row">Amazonas</th><td>Norte</td><td>81,28</td><td>32,26</td><td>49,02</td><td>17,72</td><td>57,74</td></tr>
+              <tr><th scope="row">Tocantins</th><td>Norte</td><td>84,23</td><td>37,02</td><td>47,21</td><td>14,77</td><td>52,98</td></tr>
+              <tr><th scope="row">Rio Grande do Norte</th><td>Nordeste</td><td>76,38</td><td>31,41</td><td>44,97</td><td>22,62</td><td>58,59</td></tr>
+              <tr><th scope="row">Pernambuco</th><td>Nordeste</td><td>71,56</td><td>29,35</td><td>42,21</td><td>27,44</td><td>60,65</td></tr>
+              <tr><th scope="row">Sergipe</th><td>Nordeste</td><td>93,74</td><td>51,63</td><td>42,11</td><td>5,26</td><td>38,37</td></tr>
+              <tr><th scope="row">Rondônia</th><td>Norte</td><td>53,51</td><td>13,28</td><td>40,23</td><td>45,49</td><td>76,72</td></tr>
+              <tr><th scope="row">Ceará</th><td>Nordeste</td><td>72,17</td><td>32,60</td><td>39,57</td><td>26,83</td><td>57,40</td></tr>
+              <tr><th scope="row">Bahia</th><td>Nordeste</td><td>83,40</td><td>43,99</td><td>39,41</td><td>15,60</td><td>46,01</td></tr>
+              <tr><th scope="row">Rio Grande do Sul</th><td>Sul</td><td>86,17</td><td>47,78</td><td>38,39</td><td>12,83</td><td>42,22</td></tr>
+              <tr><th scope="row">Piauí</th><td>Nordeste</td><td>92,33</td><td>54,23</td><td>38,10</td><td>6,67</td><td>35,77</td></tr>
+              <tr><th scope="row">Mato Grosso</th><td>Centro-Oeste</td><td>86,67</td><td>53,09</td><td>33,58</td><td>12,33</td><td>36,91</td></tr>
+              <tr><th scope="row">Acre</th><td>Norte</td><td>44,27</td><td>11,04</td><td>33,23</td><td>54,73</td><td>78,96</td></tr>
+              <tr><th scope="row">Pará</th><td>Norte</td><td>51,56</td><td>19,11</td><td>32,45</td><td>47,44</td><td>70,89</td></tr>
+              <tr><th scope="row">Rio de Janeiro</th><td>Sudeste</td><td>92,04</td><td>61,47</td><td>30,57</td><td>6,96</td><td>28,53</td></tr>
+              <tr><th scope="row">Maranhão</th><td>Nordeste</td><td>53,68</td><td>27,39</td><td>26,29</td><td>45,32</td><td>62,61</td></tr>
+              <tr><th scope="row">Mato Grosso do Sul</th><td>Centro-Oeste</td><td>87,84</td><td>63,65</td><td>24,19</td><td>11,16</td><td>26,35</td></tr>
+              <tr><th scope="row">Goiás</th><td>Centro-Oeste</td><td>88,83</td><td>66,32</td><td>22,51</td><td>10,17</td><td>23,68</td></tr>
+              <tr><th scope="row">Espírito Santo</th><td>Sudeste</td><td>78,12</td><td>57,11</td><td>21,01</td><td>20,88</td><td>32,89</td></tr>
+              <tr><th scope="row">Paraíba</th><td>Nordeste</td><td>59,45</td><td>38,61</td><td>20,84</td><td>39,55</td><td>51,39</td></tr>
+              <tr><th scope="row">Roraima</th><td>Norte</td><td>76,92</td><td>64,41</td><td>12,51</td><td>22,08</td><td>25,59</td></tr>
+              <tr><th scope="row">Paraná</th><td>Sul</td><td>89,49</td><td>77,51</td><td>11,98</td><td>9,51</td><td>12,49</td></tr>
+              <tr><th scope="row">Distrito Federal</th><td>Centro-Oeste</td><td>97,45</td><td>91,77</td><td>5,68</td><td>1,55</td><td>0,00</td></tr>
+              <tr><th scope="row">Minas Gerais</th><td>Sudeste</td><td>83,53</td><td>78,43</td><td>5,10</td><td>15,47</td><td>11,57</td></tr>
+              <tr><th scope="row">São Paulo</th><td>Sudeste</td><td>97,36</td><td>93,28</td><td>4,08</td><td>1,64</td><td>0,00</td></tr>
+            </tbody>
+            </table>
+          </div>
         </details>
 
-        <h3>RQ2 · Atendimento urbano e rural</h3>
-        <p>No Brasil, a diferença urbano–rural foi de <strong>69,44 p.p.</strong> para água (92,32% ante 22,88%) e <strong>63,69 p.p.</strong> para esgoto (68,44% ante 4,75%). Entre as macrorregiões, o maior hiato em água apareceu no Centro-Oeste (87,51 p.p.). Para esgoto, o maior ocorreu no Sudeste (74,57 p.p.), que também registrou a maior taxa rural de coleta entre as regiões (11,23%).</p>
+        <h3 id="rq2">RQ2 · Atendimento urbano e rural</h3>
+        <p>No Brasil, a diferença entre o atendimento urbano e o rural é de <strong>69,44 p.p.</strong> em água (92,32% contra 22,88%) e de <strong>63,69 p.p.</strong> em esgoto (68,44% contra 4,75%). Nas cidades, a rede de água passa de 96% no Sudeste, no Sul e no Centro-Oeste. No campo, menos de uma em cada quatro pessoas é atendida por rede de água, e menos de uma em vinte por rede de esgoto (Figura 4 e Tabela 6).</p>
         <figure>
-          <img src="assets/urbano-rural.png" width="1836" height="737" loading="lazy" alt="Pares de pontos urbano e rural para cada região. Em todas as regiões, os percentuais urbanos são maiores nos dois serviços.">
-          <figcaption><strong>Figura 2.</strong> Atendimento urbano e rural. O comprimento da linha indica a diferença em pontos percentuais. Fonte: consolidados SINISA 2025 (ref. 2024).</figcaption>
+          <img src="assets/urbano-rural.png" width="1835" height="737" loading="lazy" alt="Pares de pontos urbano e rural para o Brasil e cada região. Em todas as regiões, os percentuais urbanos são maiores nos dois serviços.">
+          <figcaption><strong>Figura 4.</strong> Atendimento urbano e rural por serviço. O comprimento da linha é o hiato em pontos percentuais. Fonte: consolidados SINISA 2025 (ref. 2024).</figcaption>
         </figure>
-        <p>O Norte teve a menor diferença regional em esgoto, 26,63 p.p., mas os dois percentuais foram baixos (27,68% urbano e 1,05% rural). A distância entre as taxas e o nível de cada taxa respondem a perguntas diferentes. A análise é restrita às redes. As soluções locais, como poços e fossas, exigem outros indicadores.</p>
+        <div class="rolagem">
+          <table>
+            <caption><strong>Tabela 6.</strong> Atendimento urbano e rural e hiato (urbano − rural) em cada serviço.</caption>
+            <thead><tr><th scope="col">Território</th><th scope="col">Água urbana (%)</th><th scope="col">Água rural (%)</th><th scope="col">Hiato água (p.p.)</th><th scope="col">Esgoto urbano (%)</th><th scope="col">Esgoto rural (%)</th><th scope="col">Hiato esgoto (p.p.)</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Brasil</th><td>92,32</td><td>22,88</td><td>69,44</td><td>68,44</td><td>4,75</td><td>63,69</td></tr>
+              <tr><th scope="row">Norte</th><td>74,93</td><td>13,27</td><td>61,66</td><td>27,68</td><td>1,05</td><td>26,63</td></tr>
+              <tr><th scope="row">Nordeste</th><td>85,34</td><td>29,86</td><td>55,48</td><td>43,45</td><td>2,81</td><td>40,64</td></tr>
+              <tr><th scope="row">Sudeste</th><td>96,18</td><td>21,42</td><td>74,76</td><td>85,80</td><td>11,23</td><td>74,57</td></tr>
+              <tr><th scope="row">Sul</th><td>97,51</td><td>17,22</td><td>80,29</td><td>63,32</td><td>2,74</td><td>60,58</td></tr>
+              <tr><th scope="row">Centro-Oeste</th><td>96,95</td><td>9,44</td><td>87,51</td><td>73,28</td><td>2,73</td><td>70,55</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>O maior hiato regional em água está no Centro-Oeste (87,51 p.p.), que combina 96,95% de atendimento urbano com 9,44% no rural. O menor está no Nordeste (55,48 p.p.), a região com a maior taxa rural de água (29,86%). Em esgoto, o maior hiato é o do Sudeste (74,57 p.p.), que também tem a maior taxa rural de coleta (11,23%). O menor é o do Norte (26,63 p.p.), mas por um motivo ruim: os dois percentuais são baixos (27,68% urbano e 1,05% rural). Um hiato pequeno, portanto, nem sempre indica igualdade no acesso. Pode indicar que a rede ainda não chegou a nenhum dos dois recortes.</p>
+        <figure class="estreita">
+          <img src="assets/calor-ufs.png" width="1188" height="1728" loading="lazy" alt="Mapa de calor com as 27 UFs nas linhas e quatro colunas: água urbana, água rural, esgoto urbano e esgoto rural. A coluna de água urbana é quase toda escura. A de esgoto rural é quase toda clara.">
+          <figcaption><strong>Figura 5.</strong> Atendimento por recorte em cada UF, agrupado por macrorregião. Cores mais escuras indicam percentuais mais altos. Fonte: consolidados SINISA 2025 (ref. 2024).</figcaption>
+        </figure>
+        <p>A Figura 5 leva a comparação às UFs. A coluna de água urbana é escura quase de ponta a ponta, e a de esgoto rural é clara em todo o país. A coleta rural por rede fica <strong>abaixo de 5% em 21 das 27 UFs</strong> e é zero em seis (Acre, Amapá, Roraima, Tocantins, Mato Grosso e Mato Grosso do Sul). O maior valor é o do Distrito Federal (28,84%). Em água, só três UFs atendem mais da metade da população rural por rede: Sergipe (72,40%), Distrito Federal (55,06%) e Piauí (51,32%). A mediana entre as UFs é de 16,37% em água rural e de 2,27% em esgoto rural.</p>
+        <p>Dois cuidados valem para esta pergunta. O primeiro é que a rede nem sempre é a solução esperada em áreas de baixa densidade, onde poços, cisternas e fossas sépticas são alternativas previstas. O recorte deste estudo mede redes e não capta essas soluções. O segundo é que a coluna de esgoto urbano da Figura 5 mostra que a diferença entre os serviços, vista na RQ1, já existe dentro das cidades: em Santa Catarina, 98,6% da população urbana tem rede de água e 40,1% tem rede de esgoto.</p>
 
-        <h3>RQ3 · Variação entre municípios</h3>
-        <p>Entre os 2.710 municípios com pares válidos, a diferença mediana foi de <strong>10,82 p.p.</strong> O intervalo entre o primeiro e o terceiro quartis foi de 0,69 a 35,025 p.p., com desvio-padrão de 26,42 p.p. As correlações de Pearson (0,493) e Spearman (0,541) indicam associação positiva, com dispersão mesmo entre municípios com atendimento de água parecido.</p>
+        <h3 id="rq3">RQ3 · Dispersão e associação entre municípios</h3>
+        <p>Nos 2.710 municípios da amostra pareada, a diferença mediana é de <strong>10,82 p.p.</strong>, com primeiro quartil em 0,69 p.p. e terceiro em 35,03 p.p. O desvio-padrão é de 26,42 p.p., e a média (19,44 p.p.) fica bem acima da mediana. A distribuição é assimétrica à direita (assimetria de 0,74): muitos municípios com diferença próxima de zero e uma cauda longa de municípios com água quase universal e pouco esgoto (Figura 6).</p>
+        <figure>
+          <img src="assets/distribuicao.png" width="1872" height="774" loading="lazy" alt="À esquerda, histograma da diferença municipal, com pico entre 0 e 5 pontos e cauda até 100. À direita, diagramas de caixa por região: o Sudeste tem caixa estreita perto de zero, e Norte, Nordeste e Sul têm caixas largas com medianas acima de 25 pontos.">
+          <figcaption><strong>Figura 6.</strong> Distribuição da diferença entre água e esgoto nos municípios pareados e diagramas de caixa por macrorregião. A linha vertical em zero separa os municípios em que o esgoto supera a água. Fonte: elaboração própria com dados do SINISA 2025 (ref. 2024).</figcaption>
+        </figure>
+        <p>A dispersão muda de forma entre as regiões (Tabela 7). No Sudeste, metade dos municípios tem diferença de até 3,55 p.p., e o intervalo interquartil é de 13,6 p.p. No Nordeste e no Sul, a mediana passa de 25 p.p. e o intervalo interquartil supera 40 p.p. Dentro de uma mesma região convivem municípios com os dois serviços equilibrados e municípios com 50 p.p. ou mais de distância.</p>
+        <div class="rolagem">
+          <table>
+            <caption><strong>Tabela 7.</strong> Diferença entre água e esgoto nos municípios pareados, por macrorregião, com as correlações entre os dois indicadores.</caption>
+            <thead><tr><th scope="col">Região</th><th scope="col">Pares</th><th scope="col">Q1 (p.p.)</th><th scope="col">Mediana (p.p.)</th><th scope="col">Q3 (p.p.)</th><th scope="col">Desvio-padrão (p.p.)</th><th scope="col">Pearson</th><th scope="col">Spearman</th><th scope="col">Esgoto &gt; água</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Norte</th><td>62</td><td>13,92</td><td>34,09</td><td>47,87</td><td>25,69</td><td>0,415</td><td>0,412</td><td>2</td></tr>
+              <tr><th scope="row">Nordeste</th><td>573</td><td>13,41</td><td>36,25</td><td>54,95</td><td>30,01</td><td>0,149</td><td>0,144</td><td>71</td></tr>
+              <tr><th scope="row">Sudeste</th><td>1.439</td><td>0,00</td><td>3,55</td><td>13,62</td><td>18,42</td><td>0,676</td><td>0,723</td><td>238</td></tr>
+              <tr><th scope="row">Sul</th><td>444</td><td>8,07</td><td>25,79</td><td>52,84</td><td>28,05</td><td>0,392</td><td>0,414</td><td>20</td></tr>
+              <tr><th scope="row">Centro-Oeste</th><td>192</td><td>4,83</td><td>20,59</td><td>43,56</td><td>24,67</td><td>0,385</td><td>0,363</td><td>3</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>A Tabela 8 mostra a concentração por faixas. No conjunto, 30,5% dos municípios têm os dois indicadores a até 5 p.p. um do outro, e 15,3% têm diferença acima de 50 p.p. No Nordeste, a faixa acima de 50 p.p. é a mais frequente (31,9%). No Sudeste, ela reúne 4,0% dos municípios.</p>
+        <div class="rolagem">
+          <table>
+            <caption><strong>Tabela 8.</strong> Municípios por faixa de diferença (p.p.) e participação na região.</caption>
+            <thead><tr><th scope="col">Região</th><th scope="col">Esgoto acima (&lt; −5)</th><th scope="col">Próximos (−5 a 5)</th><th scope="col">5 a 25</th><th scope="col">25 a 50</th><th scope="col">Acima de 50</th><th scope="col">Total</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Norte</th><td>2 (3,2%)</td><td>6 (9,7%)</td><td>15 (24,2%)</td><td>24 (38,7%)</td><td>15 (24,2%)</td><td>62</td></tr>
+              <tr><th scope="row">Nordeste</th><td>60 (10,5%)</td><td>46 (8,0%)</td><td>121 (21,1%)</td><td>163 (28,4%)</td><td>183 (31,9%)</td><td>573</td></tr>
+              <tr><th scope="row">Sudeste</th><td>147 (10,2%)</td><td>641 (44,5%)</td><td>464 (32,2%)</td><td>130 (9,0%)</td><td>57 (4,0%)</td><td>1.439</td></tr>
+              <tr><th scope="row">Sul</th><td>7 (1,6%)</td><td>85 (19,1%)</td><td>126 (28,4%)</td><td>107 (24,1%)</td><td>119 (26,8%)</td><td>444</td></tr>
+              <tr><th scope="row">Centro-Oeste</th><td>0 (0,0%)</td><td>48 (25,0%)</td><td>63 (32,8%)</td><td>41 (21,4%)</td><td>40 (20,8%)</td><td>192</td></tr>
+              <tr><th scope="row">Brasil</th><td>216 (8,0%)</td><td>826 (30,5%)</td><td>789 (29,1%)</td><td>465 (17,2%)</td><td>414 (15,3%)</td><td>2.710</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Os dois indicadores se associam de forma positiva e moderada: Pearson de <strong>0,493</strong> e Spearman de <strong>0,541</strong> no conjunto. A Figura 7 mostra o que esses números resumem. A maior parte dos pontos fica abaixo da diagonal, e para um mesmo percentual de água há municípios com quase nenhum esgoto e municípios com esgoto quase universal. A associação é forte no Sudeste (Pearson de 0,676) e quase nula no Nordeste (0,149), onde saber a cobertura de água de um município diz pouco sobre a de esgoto.</p>
         <figure>
           <iframe src="assets/municipios.html" title="Gráfico interativo dos indicadores de água e esgoto em 2.710 municípios" loading="lazy"></iframe>
-          <figcaption><strong>Figura 3.</strong> Cada ponto representa um município. Passe o cursor ou toque para ver o nome e os indicadores. Use a legenda para filtrar regiões. A linha tracejada marca igualdade entre os percentuais. <a href="assets/municipios.html">Abrir gráfico em página própria</a>.</figcaption>
+          <figcaption><strong>Figura 7 (interativa).</strong> Cada ponto é um município. Passe o cursor ou toque para ver nome, indicadores e natureza dos prestadores. Clique na legenda para ocultar ou isolar regiões. A diagonal tracejada marca igualdade entre os percentuais, e as linhas pontilhadas, as metas de 2033. <a href="assets/municipios.html">Abrir em página própria</a>.</figcaption>
         </figure>
-        <p>O critério de 1,5 intervalo interquartil identificou 48 extremos (8 abaixo e 40 acima). Foram mantidos, pois o critério é descritivo e os valores estão na faixa válida. Ulianópolis (PA) apresentou 99,75 p.p. de diferença, enquanto Cuparaque (MG) apresentou −66,20 p.p. Em 334 municípios, o indicador de esgoto superou o de água.</p>
-        <p>A distribuição dos pares foi desigual. O Sudeste concentrou 1.439 observações (53,1%) e o Norte teve 62 (2,3%). O tamanho da amostra e a seleção por disponibilidade precisam ser considerados ao comparar a dispersão regional. Os coeficientes são descritivos para o conjunto observado.</p>
-        <details>
-          <summary>Ver contagens e quartis por macrorregião</summary>
-          <table>
-            <thead><tr><th scope="col">Região</th><th scope="col">Pares</th><th scope="col">Q1 (p.p.)</th><th scope="col">Mediana (p.p.)</th><th scope="col">Q3 (p.p.)</th></tr></thead>
+        <p>Em relação às metas, 219 municípios da amostra (8,1%) têm 99% ou mais em água, 462 (17,0%) têm 90% ou mais em esgoto e 130 (4,8%) cumprem as duas condições. Entre as 27 capitais, todas presentes na amostra, três estão nessa situação: São Paulo, Curitiba e Goiânia. Nove capitais têm menos de 50% em esgoto, entre elas Manaus, Belém e Recife.</p>
+
+        <h4>Valores extremos e municípios com mais esgoto que água</h4>
+        <p>O critério de Tukey sinaliza 48 municípios: 40 acima de 86,53 p.p. e 8 abaixo de −50,81 p.p. (Tabela 9). Todos foram mantidos, pois os percentuais estão na faixa válida e o critério serve para descrever, não para excluir. No extremo positivo estão municípios com água universal e esgoto quase inexistente, como Ulianópolis (PA).</p>
+        <div class="rolagem">
+          <table class="texto">
+            <caption><strong>Tabela 9.</strong> Cinco maiores e cinco menores diferenças municipais, com a natureza jurídica dos prestadores.</caption>
+            <thead><tr><th scope="col">Município</th><th scope="col">UF</th><th scope="col">Água (%)</th><th scope="col">Esgoto (%)</th><th scope="col">Diferença (p.p.)</th><th scope="col">Prestador de água</th><th scope="col">Prestador de esgoto</th></tr></thead>
             <tbody>
-              <tr><th scope="row">Norte</th><td>62</td><td>13,92</td><td>34,10</td><td>47,87</td></tr>
-              <tr><th scope="row">Nordeste</th><td>573</td><td>13,41</td><td>36,25</td><td>54,95</td></tr>
-              <tr><th scope="row">Sudeste</th><td>1.439</td><td>0,00</td><td>3,55</td><td>13,62</td></tr>
-              <tr><th scope="row">Sul</th><td>444</td><td>8,07</td><td>25,79</td><td>52,84</td></tr>
-              <tr><th scope="row">Centro-Oeste</th><td>192</td><td>4,84</td><td>20,59</td><td>43,56</td></tr>
+              <tr><th scope="row">Ulianópolis</th><td>PA</td><td>100,00</td><td>0,25</td><td>99,75</td><td>Autarquia</td><td>Autarquia</td></tr>
+              <tr><th scope="row">Barra D Alcântara</th><td>PI</td><td>99,19</td><td>0,02</td><td>99,17</td><td>Município</td><td>Município</td></tr>
+              <tr><th scope="row">Imbé</th><td>RS</td><td>99,99</td><td>1,23</td><td>98,76</td><td>Empresa privada</td><td>Empresa privada</td></tr>
+              <tr><th scope="row">Mato Leitão</th><td>RS</td><td>100,00</td><td>2,00</td><td>98,00</td><td>Associação privada</td><td>Município</td></tr>
+              <tr><th scope="row">Charqueadas</th><td>RS</td><td>97,19</td><td>0,01</td><td>97,18</td><td>Empresa privada</td><td>Empresa privada</td></tr>
+              <tr><th scope="row">Cuparaque</th><td>MG</td><td>20,33</td><td>86,53</td><td>−66,20</td><td>Sociedade de economia mista</td><td>Município</td></tr>
+              <tr><th scope="row">Riacho de Santo Antônio</th><td>PB</td><td>0,00</td><td>65,07</td><td>−65,07</td><td>Sociedade de economia mista</td><td>Mais de um tipo</td></tr>
+              <tr><th scope="row">Caparaó</th><td>MG</td><td>34,99</td><td>100,00</td><td>−65,01</td><td>Sociedade de economia mista</td><td>Município</td></tr>
+              <tr><th scope="row">Flexeiras</th><td>AL</td><td>0,00</td><td>64,68</td><td>−64,68</td><td>Sociedade de economia mista</td><td>Município</td></tr>
+              <tr><th scope="row">Pedras Altas</th><td>RS</td><td>31,86</td><td>96,05</td><td>−64,19</td><td>Empresa privada</td><td>Empresa privada</td></tr>
             </tbody>
           </table>
+        </div>
+        <p>Em <strong>334 municípios</strong> (12,3%) o indicador de esgoto supera o de água, o que parece contraintuitivo. Os dados oferecem uma pista. Nesses municípios, os serviços de água e esgoto têm prestadores de naturezas jurídicas diferentes em 73,7% dos casos, contra 14,1% nos demais. O padrão mais comum nos extremos negativos é uma companhia estadual na água e a prefeitura no esgoto, como em Cuparaque e Caparaó (MG). Cada prestador informa o seu módulo, e o indicador de água pode refletir só a parte do município atendida pela companhia. Esses casos apontam mais para diferenças de declaração entre os módulos do que para municípios com esgoto e sem água.</p>
+
+        <h4>Diferença por natureza do prestador</h4>
+        <div class="rolagem">
+          <table>
+            <caption><strong>Tabela 10.</strong> Medianas na amostra pareada por natureza jurídica do prestador de água (grupos com 30 municípios ou mais).</caption>
+            <thead><tr><th scope="col">Prestador de água</th><th scope="col">Municípios</th><th scope="col">Água, mediana (%)</th><th scope="col">Esgoto, mediana (%)</th><th scope="col">Diferença, mediana (p.p.)</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Sociedade de economia mista</th><td>1.337</td><td>72,85</td><td>51,93</td><td>13,71</td></tr>
+              <tr><th scope="row">Empresa privada</th><td>605</td><td>91,47</td><td>77,42</td><td>9,16</td></tr>
+              <tr><th scope="row">Autarquia</th><td>299</td><td>92,12</td><td>81,51</td><td>4,14</td></tr>
+              <tr><th scope="row">Município</th><td>268</td><td>89,21</td><td>80,36</td><td>0,31</td></tr>
+              <tr><th scope="row">Mais de um tipo</th><td>155</td><td>74,99</td><td>21,12</td><td>45,86</td></tr>
+              <tr><th scope="row">Empresa pública</th><td>45</td><td>59,36</td><td>40,54</td><td>13,59</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Os municípios atendidos por autarquias e pela administração direta têm as menores diferenças medianas (4,14 e 0,31 p.p.). Nos atendidos por sociedades de economia mista, em geral companhias estaduais, a mediana é de 13,71 p.p., com taxas de água e esgoto mais baixas. O grupo com prestadores de mais de um tipo tem a maior diferença (45,86 p.p.). A leitura pede cautela: a natureza do prestador se confunde com a região e o porte do município, que esta análise não controla. A tabela descreve grupos e não mede o efeito do modelo de prestação.</p>
+        <details>
+          <summary>Ver os indicadores das 27 capitais (Tabela 11)</summary>
+          <div class="rolagem">
+            <table>
+              <caption><strong>Tabela 11.</strong> Capitais em ordem decrescente de diferença.</caption>
+              <thead><tr><th scope="col">Capital</th><th scope="col">UF</th><th scope="col">Água (%)</th><th scope="col">Esgoto (%)</th><th scope="col">Diferença (p.p.)</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Manaus</th><td>AM</td><td>97,13</td><td>32,35</td><td>64,78</td></tr>
+              <tr><th scope="row">Belém</th><td>PA</td><td>88,18</td><td>25,27</td><td>62,91</td></tr>
+              <tr><th scope="row">Macapá</th><td>AP</td><td>76,05</td><td>14,94</td><td>61,11</td></tr>
+              <tr><th scope="row">Maceió</th><td>AL</td><td>85,70</td><td>33,53</td><td>52,17</td></tr>
+              <tr><th scope="row">São Luís</th><td>MA</td><td>89,23</td><td>41,85</td><td>47,38</td></tr>
+              <tr><th scope="row">Natal</th><td>RN</td><td>90,51</td><td>45,88</td><td>44,63</td></tr>
+              <tr><th scope="row">Teresina</th><td>PI</td><td>94,81</td><td>55,46</td><td>39,35</td></tr>
+              <tr><th scope="row">Recife</th><td>PE</td><td>78,93</td><td>40,28</td><td>38,65</td></tr>
+              <tr><th scope="row">Florianópolis</th><td>SC</td><td>96,67</td><td>67,66</td><td>29,01</td></tr>
+              <tr><th scope="row">Porto Alegre</th><td>RS</td><td>100,00</td><td>72,35</td><td>27,65</td></tr>
+              <tr><th scope="row">Porto Velho</th><td>RO</td><td>30,74</td><td>8,69</td><td>22,05</td></tr>
+              <tr><th scope="row">Aracaju</th><td>SE</td><td>99,63</td><td>77,83</td><td>21,80</td></tr>
+              <tr><th scope="row">Rio Branco</th><td>AC</td><td>46,74</td><td>25,07</td><td>21,67</td></tr>
+              <tr><th scope="row">Palmas</th><td>TO</td><td>98,03</td><td>77,42</td><td>20,61</td></tr>
+              <tr><th scope="row">Fortaleza</th><td>CE</td><td>81,96</td><td>64,23</td><td>17,73</td></tr>
+              <tr><th scope="row">Cuiabá</th><td>MT</td><td>98,29</td><td>84,30</td><td>13,99</td></tr>
+              <tr><th scope="row">Vitória</th><td>ES</td><td>96,21</td><td>83,16</td><td>13,05</td></tr>
+              <tr><th scope="row">Salvador</th><td>BA</td><td>97,91</td><td>88,56</td><td>9,35</td></tr>
+              <tr><th scope="row">Campo Grande</th><td>MS</td><td>98,72</td><td>91,11</td><td>7,61</td></tr>
+              <tr><th scope="row">João Pessoa</th><td>PB</td><td>78,52</td><td>72,36</td><td>6,16</td></tr>
+              <tr><th scope="row">Brasília</th><td>DF</td><td>97,45</td><td>91,77</td><td>5,68</td></tr>
+              <tr><th scope="row">Rio de Janeiro</th><td>RJ</td><td>91,32</td><td>85,78</td><td>5,54</td></tr>
+              <tr><th scope="row">Boa Vista</th><td>RR</td><td>96,97</td><td>92,01</td><td>4,96</td></tr>
+              <tr><th scope="row">São Paulo</th><td>SP</td><td>99,98</td><td>99,26</td><td>0,72</td></tr>
+              <tr><th scope="row">Curitiba</th><td>PR</td><td>100,00</td><td>100,00</td><td>0,00</td></tr>
+              <tr><th scope="row">Goiânia</th><td>GO</td><td>99,85</td><td>99,85</td><td>0,00</td></tr>
+              <tr><th scope="row">Belo Horizonte</th><td>MG</td><td>98,57</td><td>99,41</td><td>−0,84</td></tr>
+            </tbody>
+            </table>
+          </div>
         </details>
+
+        <h3 id="sintese">Síntese das respostas</h3>
+        <div class="rolagem">
+          <table class="texto">
+            <caption><strong>Tabela 12.</strong> Resposta a cada pergunta de pesquisa e evidência principal.</caption>
+            <thead><tr><th scope="col">Pergunta</th><th scope="col">Resposta</th><th scope="col">Evidência</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">RQ1</th><td>A diferença varia muito: de 10,17 a 38,16 p.p. entre regiões e de 4,08 a 62,00 p.p. entre UFs. É maior no Norte e no Nordeste, e alta também no Sul.</td><td>Figuras 2 e 3, Tabelas 4 e 5</td></tr>
+              <tr><th scope="row">RQ2</th><td>O urbano supera o rural em 69,44 p.p. em água e 63,69 p.p. em esgoto. A coleta rural por rede fica abaixo de 5% em 21 UFs.</td><td>Figuras 4 e 5, Tabela 6</td></tr>
+              <tr><th scope="row">RQ3</th><td>Mediana de 10,82 p.p., com dispersão alta (desvio-padrão de 26,42 p.p.) e distribuição assimétrica. Associação positiva moderada (Pearson 0,493, Spearman 0,541), forte no Sudeste e quase nula no Nordeste.</td><td>Figuras 6 e 7, Tabelas 7 a 10</td></tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section id="conclusao" aria-labelledby="titulo-conclusao">
         <h2 id="titulo-conclusao">4. Conclusão</h2>
-        <p>O atendimento total por redes de água e esgoto apresentou as maiores diferenças no Norte e no Nordeste. Os percentuais rurais ficaram abaixo dos urbanos em ambos os serviços. No conjunto municipal pareado, a associação positiva conviveu com grande dispersão, inclusive com municípios em que o indicador de esgoto superou o de água.</p>
-        <p>O recorte depende da participação no SINISA, dos indicadores calculáveis e de um único ano de referência. Uma etapa futura pode incorporar as soluções alternativas do módulo de Gestão Municipal e verificar a estabilidade dos resultados em outras edições, observando mudanças de metodologia.</p>
+        <p>Os dados do SINISA para 2024 mostram que a rede de esgoto está 21,84 p.p. atrás da rede de água no Brasil, e que esse número médio descreve mal o país. A distância passa de 37 p.p. no Norte e no Nordeste, chega a 62 p.p. no Amapá e cai a 4 p.p. em São Paulo. Nenhuma UF alcança hoje a meta de 99% em água, e duas alcançam a de 90% em esgoto, mesmo medindo só a coleta.</p>
+        <p>O recorte rural é o mais distante das metas. A rede de água atende 22,88% da população rural, e a de esgoto, 4,75%. Entre os municípios, a diferença mediana é de 10,82 p.p., mas com dispersão alta: quase um terço tem os dois serviços equilibrados e 15,3% têm mais de 50 p.p. de distância. A cobertura de água explica pouco a de esgoto fora do Sudeste.</p>
+        <p>Do ponto de vista da engenharia de dados, o trabalho mostra que a etapa de auditoria muda a interpretação. Registrar a origem de cada linha revelou que a amostra pareada é enviesada para municípios com mais rede, e guardar a natureza do prestador deu uma pista para os casos em que o esgoto supera a água.</p>
+        <h3>Limitações</h3>
+        <ul>
+          <li><strong>Amostra municipal</strong> — só 52,6% dos municípios da união têm os dois indicadores, com 53,1% dos pares no Sudeste. Os resultados da RQ3 valem para o conjunto observado.</li>
+          <li><strong>Redes, e não acesso</strong> — poços, cisternas e fossas ficam fora do recorte, o que pesa mais no meio rural.</li>
+          <li><strong>Coleta, e não tratamento</strong> — a meta legal de esgoto inclui tratamento, e os indicadores usados medem atendimento por rede coletora.</li>
+          <li><strong>Dados autodeclarados</strong> — os prestadores informam cada módulo, e as populações de referência diferem entre eles. A diferença mede distância entre taxas, e não pessoas.</li>
+          <li><strong>Um único ano</strong> — o estudo é transversal e não mede evolução nem causa.</li>
+        </ul>
+        <h3>Trabalhos futuros</h3>
+        <ul>
+          <li>Incluir as soluções alternativas do módulo de Gestão Municipal para medir acesso, e não só rede.</li>
+          <li>Ponderar os municípios pela população e combinar coleta e tratamento em um indicador comparável à meta legal.</li>
+          <li>Repetir a análise nas próximas edições do SINISA para acompanhar o ritmo de aproximação das metas de 2033, observando mudanças de metodologia.</li>
+          <li>Controlar região e porte ao comparar naturezas de prestador.</li>
+        </ul>
       </section>
 
       <section id="fair" aria-labelledby="titulo-fair">
         <h2 id="titulo-fair">5. Disponibilidade dos dados e declaração FAIR</h2>
+        <p>Todo o material está em repositório público. A declaração abaixo indica como o projeto atende a cada princípio FAIR (WILKINSON et al., 2016).</p>
         <dl class="fair">
-          <div><dt>Localizável</dt><dd>Autoria, fonte, edição e palavras-chave estão no artigo e no README.</dd></div>
-          <div><dt>Acessível</dt><dd>GitHub e GitHub Pages públicos. Os arquivos oficiais podem ser obtidos sem credenciais.</dd></div>
-          <div><dt>Interoperável</dt><dd>CSV UTF-8 e auditoria JSON, com tipos, unidades e chaves documentados.</dd></div>
-          <div><dt>Reutilizável</dt><dd>Código MIT, texto e figuras CC BY 4.0, versões fixas e verificação dos XLSX por SHA-256. A fonte oficial mantém a atribuição original.</dd></div>
+          <div><dt>Findable · Localizável</dt><dd>README com resumo, palavras-chave e link para a fonte oficial. Autoria, disciplina, semestre e instituição no cabeçalho do artigo, do README e do notebook. Arquivos brutos identificados por hash SHA-256.</dd></div>
+          <div><dt>Accessible · Acessível</dt><dd>Repositório e artigo públicos no GitHub e no GitHub Pages. A ingestão usa arquivos oficiais sem login nem credenciais. O artigo funciona em celular e computador.</dd></div>
+          <div><dt>Interoperable · Interoperável</dt><dd>Dicionário de dados com significado, tipo e formato de cada variável. Dados processados em CSV UTF-8 e Parquet, e auditoria em JSON.</dd></div>
+          <div><dt>Reusable · Reutilizável</dt><dd>Código sob licença MIT, texto e figuras sob CC BY 4.0. Dependências com versões fixas no <code>requirements.txt</code>. Pipeline determinístico, com erros explícitos se a fonte mudar.</dd></div>
         </dl>
-        <p><a href="https://github.com/GDaflon/lasalle/tree/main/linguagens-de-programacao/projeto-saneamento-sinisa/data/raw">Planilhas brutas</a> · <a href="https://github.com/GDaflon/lasalle/tree/main/linguagens-de-programacao/projeto-saneamento-sinisa/data/processed">Dados processados e auditoria</a> · <a href="https://github.com/GDaflon/lasalle/blob/main/linguagens-de-programacao/projeto-saneamento-sinisa/data/data_dictionary.md">Dicionário</a></p>
-        <p>Com Python 3.12, os comandos abaixo executam a preparação dos dados, a geração das figuras e a análise exploratória.</p>
+        <div class="rolagem">
+          <table class="texto">
+            <caption><strong>Tabela 13.</strong> Onde está cada artefato no repositório.</caption>
+            <thead><tr><th scope="col">Artefato</th><th scope="col">Caminho</th><th scope="col">Conteúdo</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Dados brutos</th><td><a href="https://github.com/GDaflon/lasalle/tree/main/linguagens-de-programacao/projeto-saneamento-sinisa/data/raw"><code>data/raw/</code></a></td><td>Quatro XLSX originais do Ministério das Cidades</td></tr>
+              <tr><th scope="row">Dados tratados</th><td><a href="https://github.com/GDaflon/lasalle/tree/main/linguagens-de-programacao/projeto-saneamento-sinisa/data/processed"><code>data/processed/</code></a></td><td>Municípios e territórios em CSV e Parquet, e auditoria em JSON</td></tr>
+              <tr><th scope="row">Dicionário</th><td><a href="https://github.com/GDaflon/lasalle/blob/main/linguagens-de-programacao/projeto-saneamento-sinisa/data/data_dictionary.md"><code>data/data_dictionary.md</code></a></td><td>Variáveis, tipos, fórmulas e regras de tratamento</td></tr>
+              <tr><th scope="row">Pipeline</th><td><a href="https://github.com/GDaflon/lasalle/tree/main/linguagens-de-programacao/projeto-saneamento-sinisa/src"><code>src/etl.py</code> e <code>src/analise.py</code></a></td><td>Ingestão, limpeza, estatísticas e figuras</td></tr>
+              <tr><th scope="row">Notebook</th><td><a href="https://github.com/GDaflon/lasalle/blob/main/linguagens-de-programacao/projeto-saneamento-sinisa/notebooks/analise_exploratoria.ipynb"><code>notebooks/analise_exploratoria.ipynb</code></a></td><td>Análise exploratória completa, executável no Colab</td></tr>
+              <tr><th scope="row">Artigo</th><td><code>docs/index.html</code> e <code>docs/assets/</code></td><td>Esta página, as figuras e os gráficos interativos</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Com Python 3.12, os comandos abaixo clonam o repositório e reproduzem o pipeline inteiro: tratamento dos dados, estatísticas, figuras e notebook. O último comando abre o artigo em <code>http://localhost:8000</code>.</p>
         <pre><code>git clone https://github.com/GDaflon/lasalle.git
 cd lasalle/linguagens-de-programacao/projeto-saneamento-sinisa
 python3.12 -m venv .venv
@@ -158,21 +464,29 @@ python -m src.etl
 python -m src.analise
 jupyter execute notebooks/analise_exploratoria.ipynb --inplace
 python -m http.server 8000 --directory docs</code></pre>
+        <p>No Windows, ative o ambiente com <code>.venv\Scripts\activate</code>. Sem instalar nada, o notebook também roda no Google Colab pelo botão no topo desta página.</p>
       </section>
 
       <section id="referencias" aria-labelledby="titulo-refs">
         <h2 id="titulo-refs">6. Referências</h2>
-        <ol class="referencias">
-          <li>BRASIL. Ministério das Cidades. <cite>Resultados SINISA 2025</cite>. Brasília, DF, 2025. Ano de referência 2024. Acesso em: 13 nov. 2026. <a href="https://www.gov.br/cidades/pt-br/acesso-a-informacao/acoes-e-programas/saneamento/sinisa/resultados-sinisa/resultados-sinisa-2025">Portal oficial</a>.</li>
-          <li>BRASIL. Ministério das Cidades. <cite>SINISA 2025: Abastecimento de Água</cite>. Brasília, DF, 2025. <a href="https://www.gov.br/cidades/pt-br/acesso-a-informacao/acoes-e-programas/saneamento/sinisa/resultados-sinisa/008_RELATORIO_SINISA_ABASTECIMENTO_AGUA_2025_defeso.pdf">Relatório</a> · <a href="https://www.gov.br/cidades/pt-br/acesso-a-informacao/acoes-e-programas/saneamento/sinisa/resultados-sinisa/GlossriodeIndicadores_GUA_2024.pdf">Glossário de indicadores</a>.</li>
-          <li>BRASIL. Ministério das Cidades. <cite>SINISA 2025: Esgotamento Sanitário</cite>. Brasília, DF, 2025. <a href="https://www.gov.br/cidades/pt-br/acesso-a-informacao/acoes-e-programas/saneamento/sinisa/resultados-sinisa/009_RELATORIO_SINISA_ESGOTAMENTO_SANITARIO_2025_defeso.pdf">Relatório</a> · <a href="https://www.gov.br/cidades/pt-br/acesso-a-informacao/acoes-e-programas/saneamento/sinisa/resultados-sinisa/GlossrioIndicadores_ESGOTO_2024.pdf">Glossário de indicadores</a>.</li>
-          <li>WILKINSON, M. D. et al. The FAIR Guiding Principles for scientific data management and stewardship. <cite>Scientific Data</cite>, v. 3, 160018, 2016. <a href="https://doi.org/10.1038/sdata.2016.18">DOI 10.1038/sdata.2016.18</a>.</li>
-          <li>PANDAS DEVELOPMENT TEAM. <cite>pandas.read_excel</cite>. Documentação, versão 2.3.3. Acesso em: 13 nov. 2026. <a href="https://pandas.pydata.org/pandas-docs/version/2.3.3/reference/api/pandas.read_excel.html">Referência da API</a>.</li>
-          <li>PLOTLY TECHNOLOGIES INC. <cite>Interactive HTML export in Python</cite>. Documentação. Acesso em: 13 nov. 2026. <a href="https://plotly.com/python/interactive-html-export/">Manual</a>.</li>
-        </ol>
+        <ul class="referencias">
+          <li>BRASIL. <cite>Lei nº 11.445, de 5 de janeiro de 2007</cite>. Estabelece as diretrizes nacionais para o saneamento básico. Brasília, DF: Presidência da República, 2007. Disponível em: <a href="https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/lei/l11445.htm">https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/lei/l11445.htm</a>. Acesso em: 16 nov. 2026.</li>
+          <li>BRASIL. <cite>Lei nº 14.026, de 15 de julho de 2020</cite>. Atualiza o marco legal do saneamento básico. Brasília, DF: Presidência da República, 2020. Disponível em: <a href="https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2020/lei/l14026.htm">https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2020/lei/l14026.htm</a>. Acesso em: 16 nov. 2026.</li>
+          <li>BRASIL. Ministério das Cidades. <cite>Resultados SINISA 2025</cite>: ano de referência 2024. Brasília, DF, 2025a. Disponível em: <a href="https://www.gov.br/cidades/pt-br/acesso-a-informacao/acoes-e-programas/saneamento/sinisa/resultados-sinisa/resultados-sinisa-2025">portal do Ministério das Cidades</a>. Acesso em: 13 nov. 2026.</li>
+          <li>BRASIL. Ministério das Cidades. <cite>SINISA 2025</cite>: abastecimento de água. Brasília, DF, 2025b. Disponível em: <a href="https://www.gov.br/cidades/pt-br/acesso-a-informacao/acoes-e-programas/saneamento/sinisa/resultados-sinisa/008_RELATORIO_SINISA_ABASTECIMENTO_AGUA_2025_defeso.pdf">relatório</a> e <a href="https://www.gov.br/cidades/pt-br/acesso-a-informacao/acoes-e-programas/saneamento/sinisa/resultados-sinisa/GlossriodeIndicadores_GUA_2024.pdf">glossário de indicadores</a>. Acesso em: 13 nov. 2026.</li>
+          <li>BRASIL. Ministério das Cidades. <cite>SINISA 2025</cite>: esgotamento sanitário. Brasília, DF, 2025c. Disponível em: <a href="https://www.gov.br/cidades/pt-br/acesso-a-informacao/acoes-e-programas/saneamento/sinisa/resultados-sinisa/009_RELATORIO_SINISA_ESGOTAMENTO_SANITARIO_2025_defeso.pdf">relatório</a> e <a href="https://www.gov.br/cidades/pt-br/acesso-a-informacao/acoes-e-programas/saneamento/sinisa/resultados-sinisa/GlossrioIndicadores_ESGOTO_2024.pdf">glossário de indicadores</a>. Acesso em: 13 nov. 2026.</li>
+          <li>HARRIS, C. R. <i>et al.</i> Array programming with NumPy. <cite>Nature</cite>, v. 585, p. 357-362, 2020. DOI: <a href="https://doi.org/10.1038/s41586-020-2649-2">10.1038/s41586-020-2649-2</a>.</li>
+          <li>HUNTER, J. D. Matplotlib: a 2D graphics environment. <cite>Computing in Science &amp; Engineering</cite>, v. 9, n. 3, p. 90-95, 2007. DOI: <a href="https://doi.org/10.1109/MCSE.2007.55">10.1109/MCSE.2007.55</a>.</li>
+          <li>MCKINNEY, W. Data structures for statistical computing in Python. <i>In</i>: PYTHON IN SCIENCE CONFERENCE, 9., 2010, Austin. <cite>Proceedings</cite> [...]. Austin: SciPy, 2010. p. 56-61. DOI: <a href="https://doi.org/10.25080/Majora-92bf1922-00a">10.25080/Majora-92bf1922-00a</a>.</li>
+          <li>NAÇÕES UNIDAS. <cite>Transformando nosso mundo</cite>: a Agenda 2030 para o Desenvolvimento Sustentável. Nova York: ONU, 2015. Objetivo 6: água potável e saneamento. Disponível em: <a href="https://brasil.un.org/pt-br/sdgs/6">https://brasil.un.org/pt-br/sdgs/6</a>. Acesso em: 16 nov. 2026.</li>
+          <li>PANDAS DEVELOPMENT TEAM. <cite>pandas.read_excel</cite>. Documentação, versão 2.3.3. Disponível em: <a href="https://pandas.pydata.org/pandas-docs/version/2.3.3/reference/api/pandas.read_excel.html">referência da API</a>. Acesso em: 13 nov. 2026.</li>
+          <li>PLOTLY TECHNOLOGIES INC. <cite>Interactive HTML export in Python</cite>. Documentação. Disponível em: <a href="https://plotly.com/python/interactive-html-export/">https://plotly.com/python/interactive-html-export/</a>. Acesso em: 13 nov. 2026.</li>
+          <li>TUKEY, J. W. <cite>Exploratory data analysis</cite>. Reading: Addison-Wesley, 1977.</li>
+          <li>WILKINSON, M. D. <i>et al.</i> The FAIR Guiding Principles for scientific data management and stewardship. <cite>Scientific Data</cite>, v. 3, 160018, 2016. DOI: <a href="https://doi.org/10.1038/sdata.2016.18">10.1038/sdata.2016.18</a>.</li>
+        </ul>
       </section>
     </main>
   </div>
-  <footer><div class="largura">Linguagens de Programação · Unilasalle-RJ · 2026.2</div></footer>
+  <footer><div class="largura">Linguagens de Programação · Centro Universitário La Salle do Rio de Janeiro · 2026.2 · Texto e figuras sob CC BY 4.0</div></footer>
 </body>
 </html>

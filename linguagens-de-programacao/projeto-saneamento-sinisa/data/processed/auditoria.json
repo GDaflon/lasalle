@@ -25,6 +25,15 @@
       }
     },
     "linhas": 5144,
+    "prestadores": {
+      "Associação privada": 13,
+      "Autarquia": 485,
+      "Empresa privada": 978,
+      "Empresa pública": 51,
+      "Mais de um tipo": 313,
+      "Município": 617,
+      "Sociedade de economia mista": 2687
+    },
     "sha256": "262f74f515b6225b7c9c122576159ab45576ae15628ae67612d7cee6c333623d"
   },
   "agua_uf.xlsx": {
@@ -83,6 +92,15 @@
       }
     },
     "linhas": 2749,
+    "prestadores": {
+      "Associação privada": 1,
+      "Autarquia": 316,
+      "Empresa privada": 600,
+      "Empresa pública": 45,
+      "Mais de um tipo": 221,
+      "Município": 587,
+      "Sociedade de economia mista": 979
+    },
     "sha256": "8ff86088f3fccda8adddbf5e7df1fa5be8246dfad23f9b6fe3a52bdbd3445b7b"
   },
   "esgoto_uf.xlsx": {
@@ -93,6 +111,11 @@
         "zeros": 6
       },
       "esgoto_total_pct": {
+        "marcadores": {},
+        "validos": 33,
+        "zeros": 0
+      },
+      "esgoto_tratado_pct": {
         "marcadores": {},
         "validos": 33,
         "zeros": 0

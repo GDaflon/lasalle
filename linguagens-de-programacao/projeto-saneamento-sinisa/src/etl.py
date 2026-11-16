@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
@@ -59,6 +60,19 @@ CODIGOS = {
     "agua": {"IAG0001": "agua_total_pct", "IAG0002": "agua_urbana_pct", "IAG0003": "agua_rural_pct"},
     "esgoto": {"IES0001": "esgoto_total_pct", "IES0002": "esgoto_urbana_pct", "IES0003": "esgoto_rural_pct"},
 }
+# Lido apenas nos consolidados. Na base municipal, o IES2004 passa de 100% em alguns registros.
+CODIGOS_CONSOLIDADO = {"esgoto": {"IES2004": "esgoto_tratado_pct"}}
+# Campos cadastrais da base municipal: capital e natureza jurídica do prestador (CAD0002).
+CADASTRO = {"Capital": "capital", "CAD0002": "prestador"}
+VARIOS_PRESTADORES = "Mais de um tipo"
+
+
+def natureza_prestador(valor):
+    """Reduz o CAD0002 a uma categoria. Municípios com vários prestadores trazem uma lista."""
+    tipos = sorted({parte.strip() for parte in re.split(r"[;|]", str(valor)) if parte.strip()})
+    if not tipos:
+        return pd.NA
+    return tipos[0] if len(tipos) == 1 else VARIOS_PRESTADORES
 
 
 def obter_planilhas(modulo, pasta):
@@ -97,7 +111,11 @@ def ler_indicadores(caminho, modulo, escala):
         if escala == "municipal"
         else {"UF/Macrorregião": "territorio", "Sigla": "sigla"}
     )
-    colunas = chaves | CODIGOS[modulo]
+    indicadores = CODIGOS[modulo] | (CODIGOS_CONSOLIDADO.get(modulo, {}) if escala == "uf" else {})
+    cadastro = (
+        {codigo: f"{nome}_{modulo}" for codigo, nome in CADASTRO.items()} if escala == "municipal" else {}
+    )
+    colunas = chaves | cadastro | indicadores
     candidatos = origem.index[origem.apply(lambda linha: set(colunas).issubset(linha.values), axis=1)]
     if len(candidatos) != 1:
         raise ValueError(f"Cabeçalho não identificado de forma única: {caminho.name}")
@@ -108,7 +126,7 @@ def ler_indicadores(caminho, modulo, escala):
     tabela = tabela.loc[tabela.ne("").any(axis=1)].reset_index(drop=True)
 
     auditoria = {}
-    for coluna in CODIGOS[modulo].values():
+    for coluna in indicadores.values():
         original = tabela[coluna].astype("string").str.strip()
         ausente = original.isna() | original.eq("") | original.isin(MARCADORES)
         numero = pd.to_numeric(original.mask(ausente), errors="coerce")
@@ -128,6 +146,12 @@ def ler_indicadores(caminho, modulo, escala):
             raise ValueError(f"Código IBGE inválido ou duplicado: {caminho.name}")
         if not tabela["uf"].map(REGIAO_POR_UF).eq(tabela["regiao"]).all():
             raise ValueError(f"UF e macrorregião incompatíveis: {caminho.name}")
+        capital = tabela[f"capital_{modulo}"].astype("string").str.strip()
+        if not capital.isin(["", "Sim"]).all() or capital.eq("Sim").sum() != 27:
+            raise ValueError(f"Marcação de capital inesperada: {caminho.name}")
+        tabela[f"capital_{modulo}"] = capital.eq("Sim")
+        tabela[f"prestador_{modulo}"] = tabela[f"prestador_{modulo}"].map(natureza_prestador).astype("string")
+        prestadores = tabela[f"prestador_{modulo}"].value_counts(dropna=False).sort_index()
     else:
         tabela["nivel"] = "UF"
         tabela.loc[tabela["territorio"].isin(REGIOES), "nivel"] = "Macrorregião"
@@ -139,7 +163,10 @@ def ler_indicadores(caminho, modulo, escala):
         )
         if tabela.duplicated(["nivel", "sigla"]).any() or set(zip(tabela["nivel"], tabela["sigla"])) != esperadas:
             raise ValueError(f"Territórios inesperados no consolidado: {caminho.name}")
-    return tabela, {"linhas": len(tabela), "indicadores": auditoria}
+    relatorio = {"linhas": len(tabela), "indicadores": auditoria}
+    if escala == "municipal":
+        relatorio["prestadores"] = {str(tipo): int(total) for tipo, total in prestadores.items()}
+    return tabela, relatorio
 
 
 def unir_municipios(agua, esgoto):
@@ -154,12 +181,17 @@ def unir_municipios(agua, esgoto):
                 raise ValueError(f"Divergência territorial após o cruzamento: {campo}")
         # O nome da planilha de água prevalece quando o mesmo código tem grafias diferentes.
         pares[campo] = agua_valor.combine_first(esgoto_valor)
+    capital_agua, capital_esgoto = pares.pop("capital_agua"), pares.pop("capital_esgoto")
+    pares["capital"] = capital_agua.fillna(False).astype(bool) | capital_esgoto.fillna(False).astype(bool)
+    if pares["capital"].sum() != 27:
+        raise ValueError("As capitais divergem entre os módulos.")
     pares["presenca"] = pares["presenca"].map({
         "left_only": "Somente água", "right_only": "Somente esgoto", "both": "Ambos",
     })
     pares["diferenca_total_pp"] = pares["agua_total_pct"] - pares["esgoto_total_pct"]
-    return pares[chaves + ["presenca"] + list(CODIGOS["agua"].values())
-                 + list(CODIGOS["esgoto"].values()) + ["diferenca_total_pp"]]
+    return pares[chaves + ["capital", "prestador_agua", "prestador_esgoto", "presenca"]
+                 + list(CODIGOS["agua"].values()) + list(CODIGOS["esgoto"].values())
+                 + ["diferenca_total_pp"]]
 
 
 def executar(pasta_bruta=None, pasta_saida=None):
@@ -184,10 +216,19 @@ def executar(pasta_bruta=None, pasta_saida=None):
         consolidados[f"hiato_{modulo}_pp"] = (
             consolidados[f"{modulo}_urbana_pct"] - consolidados[f"{modulo}_rural_pct"]
         )
+    consolidados["regiao"] = consolidados["sigla"].map(REGIAO_POR_UF).where(consolidados["nivel"].eq("UF"))
+    consolidados = consolidados[
+        ["nivel", "sigla", "territorio", "regiao"]
+        + list(CODIGOS["agua"].values()) + list(CODIGOS["esgoto"].values())
+        + ["esgoto_tratado_pct", "diferenca_total_pp", "hiato_agua_pp", "hiato_esgoto_pp"]
+    ]
 
     pasta_saida.mkdir(parents=True, exist_ok=True)
-    municipios.to_csv(pasta_saida / "municipios.csv", index=False, encoding="utf-8", float_format="%.2f")
-    consolidados.to_csv(pasta_saida / "territorios.csv", index=False, encoding="utf-8", float_format="%.2f")
+    # CSV para leitura direta no GitHub e Parquet para preservar os tipos (IBGE como texto, capital booleana).
+    for nome, tabela in [("municipios", municipios), ("territorios", consolidados)]:
+        tabela = tabela.round(2)
+        tabela.to_csv(pasta_saida / f"{nome}.csv", index=False, encoding="utf-8", float_format="%.2f")
+        tabela.to_parquet(pasta_saida / f"{nome}.parquet", index=False, engine="pyarrow", compression="zstd")
     auditoria["cruzamento"] = {
         "uniao": len(municipios),
         "presenca": municipios["presenca"].value_counts().to_dict(),
