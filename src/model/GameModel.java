@@ -21,12 +21,12 @@ public class GameModel {
 	private static final int RECOVERY_TICKS = 60;
 	private static final int SHIELD_TICKS = 360;
 	private static final int SPAWN_LIMIT = 520;
-	private static final int BEACH_DISTANCE = 540;
+	private static final int BEACH_DISTANCE = 520;
 
 	private static final Stage[] STAGES = {
 			new Stage("Mar Aberto", 5.0, 104, ObstacleType.ROCK, ObstacleType.LOG, ObstacleType.GULL, ObstacleType.BUOY, ObstacleType.SHARK),
-			new Stage("Tempestade", 7.0, 86, ObstacleType.WHIRLPOOL, ObstacleType.WAVE, ObstacleType.GULL, ObstacleType.SHARK, ObstacleType.WHALE),
-			new Stage("A Última Onda", 8.6, 76, ObstacleType.WAVE, ObstacleType.WHALE, ObstacleType.GULL, ObstacleType.WHIRLPOOL, ObstacleType.SHARK) };
+			new Stage("Tempestade", 7.0, 86, ObstacleType.WHIRLPOOL, ObstacleType.WAVE, ObstacleType.GULL, ObstacleType.SHARK, ObstacleType.DOLPHIN),
+			new Stage("A Última Onda", 8.6, 76, ObstacleType.WAVE, ObstacleType.DOLPHIN, ObstacleType.GULL, ObstacleType.WHIRLPOOL, ObstacleType.SHARK) };
 
 	private final Surfer surfer = new Surfer();
 	private final List<Obstacle> obstacles = new ArrayList<>();
@@ -308,9 +308,12 @@ public class GameModel {
 		return isLastStage() && getDistance() >= BEACH_DISTANCE;
 	}
 
-	/** Deslocamento da praia em pixels a partir da borda direita. */
+	/**
+	 * Deslocamento da praia em pixels a partir da borda direita. A beira chega so ate um
+	 * pouco a frente da surfista (ela nunca entra surfando na areia); na cena final ela desembarca.
+	 */
 	public int getShoreX() {
-		return WIDTH - (getDistance() - BEACH_DISTANCE) * 13;
+		return WIDTH - (int) Math.round((getDistance() - BEACH_DISTANCE) * 5.25);
 	}
 
 	public boolean isSurferVisible() {

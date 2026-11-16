@@ -5,7 +5,7 @@ import java.awt.geom.Rectangle2D;
 /** Gaivota: voa baixo, entao a surfista precisa agachar para passar por baixo. */
 public class Gull extends Obstacle {
 
-	public static final int FLIGHT_HEIGHT = 74;
+	public static final int FLIGHT_HEIGHT = 84;
 
 	public Gull(double x) {
 		super(x, 58, 20);

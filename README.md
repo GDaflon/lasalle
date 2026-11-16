@@ -1,11 +1,22 @@
-# Lost in the Waves
+# Lost in the Waves 🏄‍♀️
 
-Jogo retrô de plataforma/sobrevivência feito em **Java Swing**, organizado em **MVC**,
-com a janela principal construída no **WindowBuilder** (Eclipse).
-Trabalho G2 de Programação Orientada a Objetos.
+Jogo retrô de surfe em **Java Swing**, organizado em **MVC**, com a janela principal construída no **WindowBuilder** (Eclipse).
 
-Uma onda derruba a surfista, que perde a costa de vista e precisa atravessar
-o oceano para encontrar a areia.
+Uma onda derruba a surfista, que perde a costa de vista e precisa atravessar o oceano, por três fases cada vez mais difíceis, até encontrar a areia.
+
+<p align="center">
+  <img src="docs/gameplay.gif" alt="Trecho de uma partida" width="560">
+</p>
+
+| | |
+| --- | --- |
+| **Disciplina** | Programação Orientada a Objetos (SII1P0504N0001) · Trabalho G2 |
+| **Curso** | Sistemas de Informação · Unilasalle-RJ |
+| **Professor** | Jota Pê |
+| **Aluno** | Guilherme Daflon Goulart Costa |
+
+**Vídeos:** [partida completa, 3 fases (~2min40)](docs/videos/demo_lost_in_the_waves.mp4) · [destaques em 40 s](docs/videos/destaques_40s.mp4)<br>
+**Documentos:** [documento de entrega](docs/entrega/documento-de-entrega.pdf) · [apresentação](docs/entrega/apresentacao.pdf)
 
 ![Tela principal](docs/print_tela_principal.png)
 
@@ -31,7 +42,7 @@ javac -d bin $(find src -name "*.java") && cp -R src/assets bin/ && java -cp bin
 | Enter | Começar, avançar a história, próxima fase, tentar novamente |
 | ← / → (ou A / D) | Mover |
 | Espaço / ↑ (ou W) | Pular |
-| ↓ (ou S) | Segurar para agachar e passar sob as gaivotas |
+| ↓ (ou S) | Segurar para agachar e passar sob as gaivotas e os golfinhos |
 | P | Pausar ou continuar |
 
 O menu **Jogo** tem Novo jogo, Pausar/Continuar, Menu principal e Sair.
@@ -45,17 +56,27 @@ O menu **Ajuda** mostra os controles e os créditos.
   de novo, a fase recomeça com energia cheia e a pontuação do início da fase.
 - Chegar à praia na última fase é a **vitória**: na cena final animada ela surfa do horizonte
   até a beira, pula da prancha para a areia, caminha até a toalha e comemora.
-  A caminhada é montada recortando as pernas do sprite e movendo cada uma alternadamente.
-- Na reta final da última fase a praia surge com água rasa, espuma indo e voltando,
-  areia molhada, vegetação, coqueiro, guarda-sol, bola de praia e caranguejo.
+  A caminhada usa 4 quadros próprios da surfista andando.
+- Na reta final da última fase a praia surge no mesmo estilo da cena final (mesmas peças da
+  imagem da praia): água rasa, espuma em degraus indo e voltando, areia molhada e seca, morro com
+  grama, rocha, guarda-sol com toalha, bola de praia e caranguejo. A beira para logo à frente da
+  surfista: ela só desembarca na cena final.
+- Caranguejo em pixel art (2 quadros): anda de lado mexendo as pernas e abrindo e fechando as garras.
 - Pontuação: distância percorrida, desvios (com bônus de combo) e moedas (100).
 - Itens (boiando no mar, com um brilho em volta): **coco** (+25 energia), **garrafa de água**
   (+15 energia), **moeda** (gira) e **escudo** (absorve um impacto ou expira após ~6 s).
 - A bola de praia enviada pelo grupo enfeita a areia, na praia da última fase e na cena final.
 - Obstáculos (desenhados em pixel art no SpriteRenderer): rocha, boia, tronco, gaivota (voa baixo, com sombra na água: agache para
-  passar por baixo), tubarão (mais rápido, com barbatana e marola), baleia, onda (quebrando, com espuma e
-  respingos animados) e redemoinho (puxa a surfista para o centro).
-- Agachar dobra as pernas e abaixa o tronco sobre a prancha, reduzindo a altura da colisão.
+  passar por baixo), tubarão (mais rápido, com barbatana e marola), golfinho (nada com a barbatana de fora e,
+  perto da surfista, salta em arco por cima dela, rente à cabeça: agache para passar por baixo), onda (quebrando, desenhada na paleta do mar: parede em faixas, tubo escuro,
+  crista de espuma, cortina d'água e espuma na base, animada em 8 quadros) e redemoinho (puxa a surfista para o centro).
+- A surfista mantém o rosto e o cabelo da arte original. Na prancha ela fica na postura de surfe
+  (pés abertos ao longo da prancha, joelhos dobrados, braços abertos para frente e para trás);
+  agachada, o quadril desce, o joelho da frente fica sobre o pé da frente e o de trás desce em direção
+  à prancha. A perna e o braço de trás têm um tom mais escuro para as pernas ficarem fáceis de ler.
+  Na areia ela anda de perfil (4 quadros) e comemora com os braços para cima.
+  Ao segurar ↓ ela desce passando por um quadro intermediário e sobe pelo mesmo caminho.
+  A colisão agachada é mais baixa, e a de pé vai até o topo da cabeça.
 - Prólogo animado em 3 cenas: a surfista no mar, a onda gigante que a derruba (ela gira
   no ar e a prancha voa longe) e ela nadando de volta e subindo na prancha.
 
@@ -71,7 +92,7 @@ src/
 │   ├── GameObject.java        classe abstrata base (posição, tamanho, colisão)
 │   ├── Surfer.java            personagem do jogador (movimento, pulo, agachar)
 │   ├── Obstacle.java          obstáculo abstrato + fábrica
-│   ├── Rock, Buoy, Log, Gull, Shark, Whale, Wave, Whirlpool   obstáculos concretos
+│   ├── Rock, Buoy, Log, Gull, Shark, Dolphin, Wave, Whirlpool   obstáculos concretos
 │   ├── ObstacleType.java      tipos de obstáculo
 │   ├── Item.java / ItemType.java   itens coletáveis e seus efeitos
 │   ├── Stage.java             dados de cada fase
@@ -99,5 +120,5 @@ Conceitos de POO aplicados: **herança** (`GameObject` → `Surfer`, `Item`, `Ob
 
 ## Créditos da arte
 
-A prancha, a areia, a palmeira e o caranguejo vêm do **High Tides Basic Pack**,
+A prancha (`board.png`) vem do **High Tides Basic Pack**,
 de **Kanpelle** (https://kanpelle.itch.io/). Termos em `LICENCA_HIGH_TIDES.txt`.

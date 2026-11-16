@@ -51,7 +51,7 @@ public abstract class Obstacle extends GameObject {
 		case WHIRLPOOL:
 			return new Whirlpool(x);
 		default:
-			return new Whale(x);
+			return new Dolphin(x);
 		}
 	}
 }

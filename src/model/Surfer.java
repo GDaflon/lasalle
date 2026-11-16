@@ -10,7 +10,11 @@ public class Surfer extends GameObject {
 	public static final int WIDTH = 68;
 	public static final int HEIGHT = 72;
 	public static final int FLOOR = 414;
-	public static final int CROUCH_HEIGHT = 42;
+	public static final int CROUCH_HEIGHT = 50;
+	/** Altura da area de colisao em pe (ate o topo da cabeca). */
+	public static final int STAND_HEIGHT = 72;
+	/** Quadros que a animacao leva para descer (ou subir) da agachada. */
+	public static final int CROUCH_FRAMES = 8;
 	private static final int MIN_X = 35;
 	private static final int MAX_X = 310;
 	private static final double STEP = 4.4;
@@ -20,6 +24,7 @@ public class Surfer extends GameObject {
 	private double velocity;
 	private boolean landed;
 	private boolean crouching;
+	private int crouchFrame;
 
 	public Surfer() {
 		super(132, FLOOR, WIDTH, HEIGHT);
@@ -36,6 +41,7 @@ public class Surfer extends GameObject {
 		velocity = 0;
 		landed = true;
 		crouching = false;
+		crouchFrame = 0;
 	}
 
 	public void jump() {
@@ -47,6 +53,11 @@ public class Surfer extends GameObject {
 
 	/** Move na horizontal (direcao -1, 0 ou 1) e aplica a gravidade do pulo. */
 	public void move(int direction) {
+		if (crouching && crouchFrame < CROUCH_FRAMES) {
+			crouchFrame++;
+		} else if (!crouching && crouchFrame > 0) {
+			crouchFrame--;
+		}
 		push(direction * STEP);
 		if (!landed) {
 			y += velocity;
@@ -64,7 +75,7 @@ public class Surfer extends GameObject {
 
 	@Override
 	public Rectangle2D getBounds() {
-		int h = crouching ? CROUCH_HEIGHT : 62;
+		int h = crouching ? CROUCH_HEIGHT : STAND_HEIGHT;
 		return new Rectangle2D.Double(x + 8, y - h, WIDTH - 16, h - 3);
 	}
 
@@ -74,6 +85,11 @@ public class Surfer extends GameObject {
 
 	public boolean isCrouching() {
 		return crouching;
+	}
+
+	/** Etapa da animacao de agachar: 0 = em pe ... CROUCH_FRAMES = agachada. */
+	public int getCrouchFrame() {
+		return crouchFrame;
 	}
 
 	public void setCrouching(boolean crouching) {

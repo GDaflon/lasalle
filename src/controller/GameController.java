@@ -89,7 +89,7 @@ public class GameController implements ActionListener, KeyListener {
 			model.pause();
 			view.mostrarMensagem("Controles",
 					"← / → : mover a surfista\n" + "ESPAÇO ou ↑ : pular\n"
-							+ "↓ : agachar (passar sob as gaivotas)\n" + "P : pausar / continuar\n"
+							+ "↓ : agachar (passar sob gaivotas e golfinhos)\n" + "P : pausar / continuar\n"
 							+ "ENTER : começar, avançar a história e tentar de novo");
 		} else if (source == view.getMntmSobre()) {
 			model.pause();

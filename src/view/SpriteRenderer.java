@@ -6,10 +6,10 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Path2D;
 
+import model.Dolphin;
 import model.Gull;
 import model.Item;
 import model.Obstacle;
-import model.ObstacleType;
 import model.Surfer;
 
 /** Desenha obstaculos e itens em pixel art usando Graphics2D. */
@@ -26,6 +26,9 @@ public final class SpriteRenderer {
 		switch (obstacle.getType()) {
 		case GULL:
 			drawGull(g, left, floor - Gull.FLIGHT_HEIGHT, tick, true);
+			return;
+		case DOLPHIN:
+			drawDolphin(g, (Dolphin) obstacle, tick);
 			return;
 		default:
 			g.setColor(new Color(0xD6F8F5));
@@ -67,21 +70,8 @@ public final class SpriteRenderer {
 			g.drawArc(left + 4, floor - 15, width - 8, 16, 35, 280);
 			g.drawArc(left + 16, floor - 11, width - 32, 8, 215, 280);
 			break;
-		case SHARK:
+		default: // SHARK
 			drawShark(g, left, floor, tick);
-			break;
-		default: // WHALE
-			g.setColor(new Color(0x254364));
-			g.fillOval(left, floor - 15, width, 18);
-			g.fillPolygon(new int[] { left + 15, left + 37, left + 50 },
-					new int[] { floor - 8, floor - height, floor - 8 }, 3);
-			if (obstacle.getType() == ObstacleType.WHALE) {
-				g.fillOval(left + 9, floor - 34, width - 14, 36);
-				g.setColor(new Color(0xD6F8F5));
-				g.fillRect(left + 25, floor - 23, 3, 3);
-				g.drawLine(left + 48, floor - 31, left + 39, floor - 48);
-				g.drawLine(left + 48, floor - 31, left + 56, floor - 47);
-			}
 		}
 	}
 
@@ -166,24 +156,137 @@ public final class SpriteRenderer {
 			"RTRTRBBBBBBBBBBBBBBBBGD.DD",
 			".RBBBBBBBBBBBBBBBBBBBD....", };
 
-	/** Onda quebrando para a esquerda: crista de espuma, tubo escuro, face clara e espuma na base. */
-	private static final String[] WAVE = {
-			"........WWWWWW..............",
-			"......WWLLLLLLWW............",
-			"....WWLLMMMMMMLLW...........",
-			"...WLLMMMMMMMMMMLW..........",
-			"..WLMMDDDDDDMMMMMLW.........",
-			"..WMDKKKKKKKDMMMMMLW........",
-			"..WDKKKKKKKKKDMMMMMLW.......",
-			"..W..KKKKKKKKDMMMMMMLW......",
-			"......KKKKKKKDLMMMMMMLW.....",
-			".......KKKKKKDLMMMMMMMLLW...",
-			"........KKKKKDLLMMMMMMMMLLW.",
-			"........KKKKDDLLMMMMMMMMMMLL",
-			".........KKKDLLLMMMMMMMMMMMM",
-			"......WWKKKDLLLMMMMMMMMMMMMM",
-			"...WWWWWWWWWWLLWWMMMMMMWWMMM",
-			"WWWWWWWWWWWWWWWWWWWWWWWWWWWW", };
+	/**
+	 * Golfinho virado para a esquerda: bico curto, testa arredondada, olho, sorriso,
+	 * barbatana curvada para tras, barriga clara, nadadeira e cauda em forquilha.
+	 */
+	private static final String[] DOLPHIN = {
+			"...................DD...........",
+			".................DDGD...........",
+			"...............DDGGD............",
+			"........DDDDDDDGGGGDDDD.........",
+			"......DDLLLLLLLLLLLLLLLDDD...DD.",
+			".....DLLGGGGGGGGGGGGGGGGGGDD.DGD",
+			"....DGGGGGGGGGGGGGGGGGGGGGGGDGD.",
+			"...DGGEWGGGGGGGGGGGGGGGGGGGGGD..",
+			"DDDGGGEEGGGGGGGGGGGGGGGGGDDDGD..",
+			"DBBDDBBBGGGGGGGGGGGGGGGDD...DD..",
+			".DDBBBBBBBBBBDGGDBBBBDD.........",
+			"...DDDDDDDDDDDDGGDDDD...........",
+			"..............DDD...............", };
+
+	/** Linha do sprite que fica na base do corpo (usada para alinhar com a colisao). */
+	private static final int DOLPHIN_BODY_BOTTOM = 11;
+
+	/** Paleta propria do golfinho. */
+	private static Color dolphinColor(char c) {
+		switch (c) {
+		case 'D':
+			return new Color(0x1B3550);
+		case 'G':
+			return new Color(0x6A9AC2);
+		case 'L':
+			return new Color(0xA8CCE4);
+		case 'B':
+			return new Color(0xEAF4F8);
+		case 'E':
+			return new Color(0x0A1420);
+		case 'W':
+			return new Color(0xFFFFFF);
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Golfinho: antes do salto so a barbatana corta a agua; depois ele sai num arco,
+	 * inclinado conforme a curva (nariz para cima subindo, para baixo descendo), com
+	 * sombra na agua avisando para agachar, gotas caindo e respingo na saida e na
+	 * entrada. A parte abaixo da linha d'agua nao aparece.
+	 */
+	public static void drawDolphin(Graphics2D g, Dolphin dolphin, int tick) {
+		int floor = Surfer.FLOOR;
+		double x = dolphin.getX();
+		double cx = dolphin.getCenterX();
+		Color foam = new Color(0xF4FFFD);
+
+		if (!dolphin.isJumping()) {
+			// nadando submerso: vulto escuro e barbatana com marola
+			Graphics2D s = (Graphics2D) g.create();
+			s.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.25f));
+			s.setColor(new Color(0x0B2740));
+			s.fillOval((int) x + 6, floor + 1, 84, 9);
+			s.dispose();
+			int fx = (int) x + 46;
+			g.setColor(new Color(0x1B3550));
+			g.fillPolygon(new int[] { fx, fx + 9, fx + 16 }, new int[] { floor, floor - 15, floor }, 3);
+			g.setColor(new Color(0x6A9AC2));
+			g.fillPolygon(new int[] { fx + 4, fx + 9, fx + 12 }, new int[] { floor - 1, floor - 11, floor - 1 }, 3);
+			g.setColor(foam);
+			g.fillRect(fx - 6, floor - 1, 30, 2);
+			int phase = tick % 12;
+			g.fillRect(fx - 8 - phase, floor - 3, 4, 2);
+			return;
+		}
+		if (dolphin.hasDived()) {
+			return; // ja voltou para o fundo
+		}
+
+		double alt = dolphin.getAltitude();
+		double angle = dolphin.getTilt();
+		boolean rising = angle > 0;
+
+		// sombra na agua embaixo dele
+		if (alt > 0) {
+			Graphics2D s = (Graphics2D) g.create();
+			s.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.30f));
+			s.setColor(new Color(0x0B2740));
+			s.fillOval((int) cx - 34, floor - 3, 68, 7);
+			s.dispose();
+		}
+
+		// corpo girado em torno do centro, escondendo o que esta debaixo d'agua
+		int sw = DOLPHIN[0].length() * PX;
+		double bottom = floor - alt;
+		double pivotY = bottom - 12;
+		int left = (int) Math.round(cx - sw / 2.0);
+		int top = (int) Math.round(bottom - DOLPHIN_BODY_BOTTOM * PX);
+		Graphics2D d = (Graphics2D) g.create();
+		d.clipRect(-400, -400, 1600, floor + 400);
+		d.rotate(angle, cx, pivotY);
+		for (int r = 0; r < DOLPHIN.length; r++) {
+			for (int c = 0; c < DOLPHIN[r].length(); c++) {
+				Color color = dolphinColor(DOLPHIN[r].charAt(c));
+				if (color != null) {
+					d.setColor(color);
+					d.fillRect(left + c * PX, top + r * PX, PX, PX);
+				}
+			}
+		}
+		// gotas escorrendo da cauda (acompanham a inclinacao)
+		if (alt > 10) {
+			d.setColor(foam);
+			for (int i = 0; i < 4; i++) {
+				int drop = (tick * 3 + i * 9) % 24;
+				d.fillRect(left + sw - 8 + i * 3, (int) pivotY + drop - 6, 2, 3);
+			}
+		}
+		d.dispose();
+
+		// respingo na saida (atras dele, subindo) e na entrada (na frente, descendo)
+		if (alt < 26) {
+			double strength = (26 - Math.max(alt, -Dolphin.DEPTH)) / (26.0 + Dolphin.DEPTH);
+			int sx = (int) (rising ? cx + 30 : cx - 30);
+			int h = (int) (6 + 22 * Math.min(1, 1.6 - strength));
+			g.setColor(foam);
+			g.fillRect(sx - 22, floor - 2, 44, 3);
+			for (int i = 0; i < 6; i++) {
+				int dx = (i - 3) * 7 + 3;
+				int dy = h - Math.abs(dx) / 2 + (tick + i) % 4;
+				g.fillRect(sx + dx, floor - Math.max(3, dy), 3, 3);
+			}
+		}
+	}
 
 	private static Color pixelColor(char c) {
 		switch (c) {
@@ -245,41 +348,24 @@ public final class SpriteRenderer {
 		}
 	}
 
+	/** Quantidade de quadros da animacao da onda (lado a lado na imagem). */
+	private static final int WAVE_FRAMES = 8;
+
 	/**
-	 * Onda quebrando para a esquerda (na direcao da surfista), em pixel art.
-	 * A espuma da crista brilha, gotas caem da ponta e a espuma da base corre.
-	 * scale aumenta o tamanho dos pixels (usado no prologo).
+	 * Onda quebrando para a esquerda (na direcao da surfista), desenhada na mesma paleta
+	 * e no mesmo tamanho de pixel do mar: parede em faixas que seguem a curva, tubo escuro,
+	 * crista de espuma com bolhas, cortina d'agua caindo da ponta e espuma na base.
+	 * scale >= 2 usa a versao grande (prologo); senao, a do obstaculo.
 	 */
 	public static void drawWave(Graphics2D g, int x, int y, double scale, int tick) {
 		int px = Math.max(PX, (int) Math.round(PX * scale));
-		int rows = WAVE.length;
-		int top = y - (rows - 1) * px;
 		int left = x - 2 * px;
-		drawPixels(g, WAVE, left, top, px);
-		// brilho que percorre a crista
-		g.setColor(new Color(0xFFFFFF));
-		int shine = (tick / 4) % 10;
-		g.fillRect(left + (6 + shine) * px, top + px, px, px);
-		// gotas caindo da ponta da crista
-		g.setColor(new Color(0xF4FFFD));
-		for (int i = 0; i < 3; i++) {
-			int fall = (tick + i * 9) % 27;
-			g.fillRect(left + (2 + i % 2) * px, top + (8 + fall / 3) * px, px, px);
-		}
-		// respingos saltando da crista
-		for (int i = 0; i < 4; i++) {
-			int phase = (tick + i * 7) % 28;
-			int sx = left + (7 + i * 2) * px - phase * px / 6;
-			int sy = top - phase * px / 5 + (phase * phase) * px / 160;
-			if (sy < top + px) {
-				g.fillRect(sx, sy, px, px);
-			}
-		}
-		// espuma correndo na base
-		for (int i = 0; i < 5; i++) {
-			int bx = (i * 6 + tick / 3) % 30;
-			g.fillRect(left + (bx - 1) * px, y - px, px * 2, px);
-		}
+		int top = y - 15 * px;
+		java.awt.image.BufferedImage strip = scale >= 2 ? Assets.WAVE_BIG : Assets.WAVE_SMALL;
+		int fw = strip.getWidth() / WAVE_FRAMES;
+		int fh = strip.getHeight();
+		int frame = (tick / 5) % WAVE_FRAMES;
+		g.drawImage(strip, left, top, left + 28 * px, top + 16 * px, frame * fw, 0, frame * fw + fw, fh, null);
 	}
 
 	/**

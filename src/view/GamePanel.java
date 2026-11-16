@@ -33,12 +33,17 @@ public class GamePanel extends JPanel {
 	private static final Color FOAM = new Color(0xE5FAF8);
 	private static final Color GOLD = new Color(0xFFCB68);
 
+	/** Linha (de 72) onde comeca a prancha no sprite: acima dela fica so a surfista. */
+	private static final int BOARD_TOP = 59;
 	private static final BufferedImage PERSON = Assets.SURFER.getSubimage(0, 0, Assets.SURFER.getWidth(),
-			Assets.SURFER.getHeight() * 85 / 100);
-	private static final BufferedImage SURF_BOARD = Assets.SURFER.getSubimage(0, Assets.SURFER.getHeight() * 85 / 100,
-			Assets.SURFER.getWidth(), Assets.SURFER.getHeight() - Assets.SURFER.getHeight() * 85 / 100);
-	private static final int PERSON_H = Surfer.HEIGHT * 85 / 100;
+			Assets.SURFER.getHeight() * BOARD_TOP / Surfer.HEIGHT);
+	private static final BufferedImage SURF_BOARD = Assets.SURFER.getSubimage(0,
+			Assets.SURFER.getHeight() * BOARD_TOP / Surfer.HEIGHT, Assets.SURFER.getWidth(),
+			Assets.SURFER.getHeight() - Assets.SURFER.getHeight() * BOARD_TOP / Surfer.HEIGHT);
+	private static final int PERSON_H = BOARD_TOP;
 	private static final int BOARD_H = Surfer.HEIGHT - PERSON_H;
+	/** Altura dos quadros sem prancha (caminhada e comemoracao). */
+	private static final int ON_FOOT_H = 60;
 
 	private transient GameModel model;
 
@@ -145,29 +150,21 @@ public class GamePanel extends JPanel {
 		Surfer surfer = model.getSurfer();
 		int x = (int) surfer.getX();
 		int y = (int) surfer.getY();
-		if (surfer.isCrouching()) {
-			drawCrouch(g, x, y);
-		} else {
-			g.drawImage(Assets.SURFER, x, y - Surfer.HEIGHT, Surfer.WIDTH, Surfer.HEIGHT, null);
-		}
+		g.drawImage(surferPose(surfer.getCrouchFrame()), x, y - Surfer.HEIGHT, Surfer.WIDTH, Surfer.HEIGHT, null);
 	}
 
 	/**
-	 * Agachada: prancha igual, pernas dobradas (mais baixas e abertas) e tronco um pouco menor,
-	 * em vez de achatar a imagem inteira.
+	 * Escolhe o quadro da surfista: em pe, meio agachada (joelhos comecando a dobrar)
+	 * ou agachada (joelhos abertos, quadril baixo e o corpo curvado para frente).
 	 */
-	private void drawCrouch(Graphics2D g, int x, int y) {
-		BufferedImage sprite = Assets.SURFER;
-		int sw = sprite.getWidth();
-		int sh = sprite.getHeight();
-		int hip = sh * 55 / 100;
-		int knees = sh * 85 / 100;
-		g.drawImage(sprite, x, y - BOARD_H, x + Surfer.WIDTH, y, 0, knees, sw, sh, null);
-		g.drawImage(sprite, x - 5, y - BOARD_H - 9, x + Surfer.WIDTH + 5, y - BOARD_H + 1, 0, hip, sw, knees, null);
-		int torsoW = Surfer.WIDTH * 80 / 100;
-		int torsoH = 33;
-		int tx = x + (Surfer.WIDTH - torsoW) / 2;
-		g.drawImage(sprite, tx, y - BOARD_H - 8 - torsoH, tx + torsoW, y - BOARD_H - 8, 0, 0, sw, hip, null);
+	private static BufferedImage surferPose(int crouchFrame) {
+		if (crouchFrame == 0) {
+			return Assets.SURFER;
+		}
+		if (crouchFrame <= Surfer.CROUCH_FRAMES / 2) {
+			return Assets.SURFER_CROUCH_1;
+		}
+		return Assets.SURFER_CROUCH_2;
 	}
 
 	// ------------------------------------------------------------------
@@ -403,40 +400,22 @@ public class GamePanel extends JPanel {
 		if (t > arrive + hop * 2 / 3) {
 			drawShadow(g, (int) x, SAND_FEET + 2);
 		}
-		drawWalker(g, x, feet, step);
+		drawWalker(g, x, feet, step, t >= arrive + hop + walk);
 	}
 
 	/**
-	 * Surfista a pe (sem prancha). O sprite so tem a pose em pe, entao a caminhada e montada
-	 * recortando as pernas: cada perna avanca e levanta alternadamente e o corpo sobe e desce.
-	 * step negativo = parada.
+	 * Surfista a pe (sem prancha): usa os 4 quadros da caminhada conforme o passo.
+	 * step negativo = parada (em pe, ou com os bracos para cima comemorando).
 	 */
-	private void drawWalker(Graphics2D g, double x, double feet, double step) {
-		BufferedImage sprite = Assets.SURFER;
-		final int hip = 290;
-		final int sole = 385;
-		final int split = 209;
-		double sx = Surfer.WIDTH / (double) sprite.getWidth();
-		double sy = Surfer.HEIGHT / (double) sprite.getHeight();
-		double s = step < 0 ? 0 : Math.sin(step);
-		double bob = step < 0 ? 0 : -Math.abs(Math.cos(step)) * 2.5;
-		int top = (int) Math.round(feet - sole * sy);
-		int hipY = (int) Math.round(feet - (sole - hip) * sy);
-		int splitX = (int) Math.round(x + split * sx);
-		int right = (int) Math.round(x + Surfer.WIDTH);
-		// perna de tras (esquerda na tela) e perna da frente (direita)
-		int backDx = (int) Math.round(5 * s);
-		int backLift = (int) Math.round(-Math.max(0, -s) * 5);
-		int frontDx = (int) Math.round(-5 * s);
-		int frontLift = (int) Math.round(-Math.max(0, s) * 5);
-		int b = (int) Math.round(bob);
-		g.drawImage(sprite, (int) x + backDx, hipY + backLift + b, splitX + backDx, (int) feet + backLift, 0, hip, split, sole, null);
-		g.drawImage(sprite, splitX + frontDx, hipY + frontLift + b, right + frontDx, (int) feet + frontLift, split, hip,
-				sprite.getWidth(), sole, null);
-		// tronco, bracos e cabeca por cima, acompanhando o balanco
-		int overlap = 2; // cobre a emenda entre quadril e pernas
-		g.drawImage(sprite, (int) x, top + b, right, hipY + b + overlap, 0, 0, sprite.getWidth(),
-				hip + (int) Math.round(overlap / sy), null);
+	private void drawWalker(Graphics2D g, double x, double feet, double step, boolean cheer) {
+		BufferedImage frame;
+		if (step >= 0) {
+			int i = (int) Math.floor(step / (Math.PI / 2)) % Assets.SURFER_WALK.length;
+			frame = Assets.SURFER_WALK[i];
+		} else {
+			frame = cheer ? Assets.SURFER_CHEER : Assets.SURFER_WALK[1];
+		}
+		g.drawImage(frame, (int) x, (int) Math.round(feet) - ON_FOOT_H, Surfer.WIDTH, ON_FOOT_H, null);
 	}
 
 	private void drawShadow(Graphics2D g, int x, int y) {
@@ -473,11 +452,19 @@ public class GamePanel extends JPanel {
 		}
 	}
 
-	/** Caranguejo atravessando a areia, de lado. */
+	/** Caranguejo atravessando a areia de lado, mexendo as pernas e as garras. */
 	private void drawCrab(Graphics2D g, int t) {
 		int x = (int) Math.max(640, 830 - Math.max(0, t - 120) * 1.4);
-		int wobble = (t / 6) % 2 == 0 ? 0 : 2;
-		g.drawImage(Assets.CRAB, x, 412 - wobble, 35, 24, null);
+		drawCrabAt(g, x, 436, t);
+	}
+
+	/** Desenha o caranguejo com a base (pes) na altura "feet". */
+	private static void drawCrabAt(Graphics2D g, int x, int feet, int t) {
+		BufferedImage frame = Assets.CRAB[(t / 8) % Assets.CRAB.length];
+		int bob = (t / 8) % 2;
+		g.setColor(new Color(0x40203E57, true));
+		g.fillOval(x + 6, feet - 4, frame.getWidth() - 12, 6);
+		g.drawImage(frame, x, feet - frame.getHeight() - bob, null);
 	}
 
 	private void drawShield(Graphics2D g) {
@@ -524,64 +511,57 @@ public class GamePanel extends JPanel {
 		return shore + 160 - (y - HORIZON) * 185.0 / (H - HORIZON) + 7 * Math.sin(y * 0.08);
 	}
 
+	/**
+	 * Praia que surge no fim da ultima fase, desenhada com as mesmas pecas e cores da praia
+	 * da cena final: agua rasa, espuma em degraus indo e voltando, areia molhada, areia com
+	 * a textura da imagem final, morro com grama e rocha no fundo, guarda-sol com toalha,
+	 * bola e caranguejo.
+	 */
 	private void drawBeach(Graphics2D g) {
 		int shore = model.getShoreX();
 		int t = model.getTicks();
-		int n = (H - HORIZON) / 6 + 1;
+		int n = (H - HORIZON) / 4 + 1;
 		int[] ys = new int[n];
 		for (int i = 0; i < n; i++) {
-			ys[i] = Math.min(H, HORIZON + i * 6);
+			ys[i] = Math.min(H, HORIZON + i * 4);
 		}
-		// agua rasa (turquesa clara) antes da areia
-		fillBand(g, shore, ys, -34, 0, new Color(0x9A8FE8E2, true));
-		// areia molhada e areia seca com textura
-		fillBand(g, shore, ys, 0, 400, new Color(0xD3AE72));
+		// agua rasa turquesa (cor da beira na imagem final)
+		fillBand(g, shore, ys, -30, 0, new Color(0x63D3DC));
+		fillBand(g, shore, ys, -14, 0, new Color(0x8FE6E6));
+		// areia molhada e areia seca com a textura da praia final
+		fillBand(g, shore, ys, 0, 400, new Color(0xE2C27A));
 		Graphics2D dry = (Graphics2D) g.create();
-		dry.setPaint(new TexturePaint(Assets.SAND, new Rectangle(0, 0, 96, 96)));
-		fillBand(dry, shore, ys, 16, 400, null);
-		dry.setPaint(new GradientPaint(0, HORIZON, new Color(0x50FFF6DC, true), 0, H, new Color(0x00FFF6DC, true)));
-		fillBand(dry, shore, ys, 16, 400, null);
+		dry.setPaint(new TexturePaint(Assets.BEACH_SAND,
+				new Rectangle(0, 0, Assets.BEACH_SAND.getWidth(), Assets.BEACH_SAND.getHeight())));
+		fillBand(dry, shore, ys, 12, 400, null);
 		dry.dispose();
-		// espuma que vai e volta na beira
-		g.setColor(new Color(0xF6FFFD));
-		g.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-		int[] fx = new int[n];
-		for (int i = 0; i < n; i++) {
-			fx[i] = (int) (shoreEdge(shore, ys[i]) + 3 + 5 * Math.sin(t * 0.06 + ys[i] * 0.03));
-		}
-		g.drawPolyline(fx, ys, n);
-		g.setStroke(new BasicStroke(1));
-		for (int i = 0; i < n; i += 2) {
-			int bubble = (int) ((t * 0.7 + i * 5) % 14);
-			g.fillRect(fx[i] - 6 - bubble, ys[i] + 2, 3, 2);
-		}
-		// vegetacao no fundo da praia
-		int back = (int) shoreEdge(shore, HORIZON) + 40;
-		for (int x = back; x < W + 20; x += 26) {
-			int h = 8 + (x / 26 % 3) * 4;
-			g.setColor(new Color(0x3C8A44));
-			g.fillOval(x, HORIZON - h + 6, 34, h + 6);
-			g.setColor(new Color(0x6CC04A));
-			g.fillOval(x + 6, HORIZON - h + 6, 18, h / 2 + 3);
-		}
-		g.drawImage(Assets.PALM, back + 120, HORIZON - 44, 22, 52, null);
-		g.drawImage(Assets.PALM, back + 330, HORIZON - 38, 18, 44, null);
-		// conchas e estrela-do-mar espalhadas
-		int[][] shells = { { 210, 348 }, { 300, 420 }, { 470, 372 }, { 390, 436 }, { 560, 410 } };
-		for (int[] sh : shells) {
-			g.setColor(new Color(0xF7D2D8));
-			g.fillRect(shore + sh[0], sh[1], 5, 4);
+		// espuma em degraus que vai e volta na beira
+		int wash = (int) Math.round(Math.sin(t * 0.05) * 5);
+		for (int i = 0; i < n - 1; i++) {
+			int x = (int) (shoreEdge(shore, ys[i]) / 4) * 4 + wash;
 			g.setColor(new Color(0xFFFFFF));
-			g.fillRect(shore + sh[0] + 1, sh[1], 2, 1);
+			g.fillRect(x - 4, ys[i], 8, 4);
+			g.setColor(new Color(0xD8F6F6));
+			g.fillRect(x - 10 - ((i + t / 6) % 3) * 4, ys[i], 4, 4);
 		}
-		drawStarfish(g, shore + 250, 430);
-		// coqueiro com sombra, guarda-sol e toalha (iguais aos da cena final)
-		g.setColor(new Color(0x45A0752F, true));
-		g.fillOval(shore + 236, 402, 74, 12);
-		g.drawImage(Assets.PALM, shore + 244, 294, 54, 116, null);
-		drawUmbrella(g, shore + 420, 418);
-		SpriteRenderer.drawBeachBall(g, shore + 150, 432, 30);
-		g.drawImage(Assets.CRAB, (int) (shore + 360 + Math.sin(t * 0.05) * 22), 412, 35, 24, null);
+		// fundo da praia: rocha e morro com grama (mesmos da imagem final), apoiados no horizonte
+		int back = (int) shoreEdge(shore, HORIZON);
+		BufferedImage hill = Assets.BEACH_HILL;
+		BufferedImage rock = Assets.BEACH_ROCK;
+		int hw = hill.getWidth() * 3 / 5;
+		int hh = hill.getHeight() * 3 / 5;
+		// tudo anda junto com a praia; quando ela para, o lado recortado do morro fica fora da tela
+		g.drawImage(hill, back + 122 + hw, HORIZON + 30 - hh, -hw, hh, null);   // espelhado, base na areia
+		int rw = rock.getWidth() * 2 / 5;
+		int rh = rock.getHeight() * 2 / 5;
+		g.drawImage(rock, back + 62, HORIZON + 26 - rh, rw, rh, null);   // na frente do morro, base na areia
+		// guarda-sol com toalha, bola e caranguejo na areia
+		BufferedImage umb = Assets.BEACH_UMBRELLA;
+		int uw = umb.getWidth() * 3 / 5;
+		int uh = umb.getHeight() * 3 / 5;
+		g.drawImage(umb, shore + 92, 436 - uh, uw, uh, null);
+		SpriteRenderer.drawBeachBall(g, shore + 40, 440, 28);
+		drawCrabAt(g, (int) (shore + 268 + Math.sin(t * 0.04) * 18), 440, t);
 	}
 
 	/** Preenche a faixa entre a beira deslocada de "from" e de "to" pixels (to = 400 vai ate a borda). */
@@ -600,37 +580,6 @@ public class GamePanel extends JPanel {
 			g.setColor(color);
 		}
 		g.fillPolygon(xs, yy, xs.length);
-	}
-
-	private void drawStarfish(Graphics2D g, int x, int y) {
-		g.setColor(new Color(0xF08A3C));
-		g.fillRect(x + 4, y, 4, 12);
-		g.fillRect(x, y + 4, 12, 4);
-		g.fillRect(x + 1, y + 9, 3, 3);
-		g.fillRect(x + 8, y + 9, 3, 3);
-		g.setColor(new Color(0xFFC07A));
-		g.fillRect(x + 5, y + 5, 2, 2);
-	}
-
-	/** Guarda-sol listrado de vermelho e branco com toalha azul, como na imagem da praia. */
-	private void drawUmbrella(Graphics2D g, int x, int base) {
-		g.setColor(new Color(0x3D7FB5));
-		g.fillRect(x - 34, base - 4, 66, 12);
-		g.setColor(new Color(0xA9D6F2));
-		for (int i = 0; i < 66; i += 8) {
-			g.fillRect(x - 34 + i, base - 4, 3, 12);
-		}
-		g.setColor(new Color(0x45A0752F, true));
-		g.fillOval(x - 46, base - 8, 92, 12);
-		g.setColor(new Color(0x6B6F75));
-		g.fillRect(x - 2, base - 78, 4, 80);
-		for (int i = 0; i < 6; i++) {
-			g.setColor(i % 2 == 0 ? new Color(0xE23B3B) : new Color(0xF7F7F2));
-			g.fillArc(x - 46, base - 104, 92, 56, 180 - i * 30, -30);
-		}
-		g.setColor(new Color(0x2B2F3A));
-		g.drawArc(x - 46, base - 104, 92, 56, 0, 180);
-		g.drawLine(x - 46, base - 76, x + 46, base - 76);
 	}
 
 	private void drawOcean(Graphics2D g, int x, boolean flipped) {
