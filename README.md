@@ -1,27 +1,46 @@
-# lasalle
+# Unilasalle-RJ · Sistemas de Informação
 
-## Projeto G2 — SINISA 2025
+Trabalhos e atividades que desenvolvi no curso de **Sistemas de Informação** da Unilasalle-RJ, organizados por disciplina.
 
-**Disciplina** — Linguagens de Programação<br>
-**Professor** — Alexandre Neves Louzada<br>
-**Autores** — Guilherme Daflon Goulart Costa e Marcella Guimaraes Rodrigues Da Silva
+## Destaques
 
-[Atendimento por redes de água e esgoto no Brasil em 2024](projeto-saneamento-sinisa/README.md) · [Artigo publicado](https://daflon-prognum.github.io/lasalle/projeto-saneamento-sinisa/)
+| Projeto | Disciplina | O que é |
+| --- | --- | --- |
+| [**Lost in the Waves**](https://github.com/GDaflon/lost-in-the-waves) | Programação Orientada a Objetos · G2 | Jogo retrô de surfe em Java Swing, com MVC e WindowBuilder |
+| [**Saneamento no Brasil (SINISA 2025)**](linguagens-de-programacao/projeto-saneamento-sinisa) | Linguagens de Programação · G2 | Atendimento por redes de água e esgoto em 2024, com ETL, notebook e [artigo publicado](https://gdaflon.github.io/lasalle/projeto-saneamento-sinisa/) · em dupla com Marcella Guimaraes Rodrigues Da Silva |
+| [**Combustíveis no Brasil**](linguagens-de-programacao/projeto-precos-combustiveis) | Linguagens de Programação · G1 | Evolução dos preços e diferenças entre UFs de 2015 a 2024, com notebook, SQLite, dashboard Streamlit e [página do projeto](https://gdaflon.github.io/lasalle/projeto-precos-combustiveis/) |
 
-## Projeto G1 — 08/10/2026
+## Linguagens de Programação
 
-**Disciplina:** Linguagens de Programação  
-**Professor:** Alexandre Neves Louzada  
-**Aluno:** Guilherme Daflon Goulart Costa
+Professor Alexandre Neves Louzada · Python para análise de dados.
 
-[Combustíveis no Brasil: evolução dos preços e diferenças entre UFs, de 2015 a 2024](projeto-precos-combustiveis/README.md)
+**Projetos**
+- [`projeto-precos-combustiveis`](linguagens-de-programacao/projeto-precos-combustiveis) — G1: preços de combustíveis no Brasil
+- [`projeto-saneamento-sinisa`](linguagens-de-programacao/projeto-saneamento-sinisa) — G2: saneamento com dados do SINISA
 
-Projeto de Guilherme Daflon Goulart Costa, com notebook, dashboard Streamlit, análise em SQLite, página HTML, relatório e guia de apresentação.
+**Atividades**
 
-## Trabalho G2 — Programação Orientada a Objetos
+| Atividade | Tema |
+| --- | --- |
+| [Exercício prático 1.2](linguagens-de-programacao/atividades/exercicio-pratico-1-2) | Análise de dados de vendas |
+| [Exercício prático 1.3](linguagens-de-programacao/atividades/exercicio-pratico-1-3) | Análise visual de vendas com Pandas e Matplotlib |
+| [Exercício prático 1.4](linguagens-de-programacao/atividades/exercicio-pratico-1-4) | Limpeza e análise de dados de e-commerce |
+| [Exercício prático 1.5](linguagens-de-programacao/atividades/exercicio-pratico-1-5) | Engajamento em plataforma de streaming |
+| [NumPy](linguagens-de-programacao/atividades/analise-transformacao-numpy) | Análise e transformação de dados |
+| [Pandas](linguagens-de-programacao/atividades/exercicio-pratico-pandas) | Manipulação de DataFrames |
+| [Matplotlib](linguagens-de-programacao/atividades/atividade-pratica-matplotlib) | Gráficos |
+| [Seaborn](linguagens-de-programacao/atividades/visualizacao-estatistica-seaborn) | Visualização estatística |
+| [Folium](linguagens-de-programacao/atividades/visualizacao-geoespacial-folium) | Mapas interativos |
+| [Dados na web](linguagens-de-programacao/atividades/explorando-dados-web-python) | APIs e requisições HTTP |
+| [SQLAlchemy](linguagens-de-programacao/atividades/sistema-rh-sqlalchemy) | Sistema de RH com banco de dados |
+| [Streamlit](linguagens-de-programacao/atividades/dashboard-vendas-streamlit) | Dashboard de vendas |
 
-**Disciplina:** Programação Orientada a Objetos (SII1P0504N0001)  
-**Professor:** Jota Pê  
-**Aluno:** Guilherme Daflon Goulart Costa
+## Programação Orientada a Objetos
 
-[Lost in the Waves: jogo retrô de surfe em Java Swing (MVC + WindowBuilder)](lost-in-the-waves/README.md)
+Professor Jota Pê · Java.
+
+- [Lost in the Waves](https://github.com/GDaflon/lost-in-the-waves) — G2: jogo em Java Swing (repositório próprio)
+
+---
+
+Guilherme Daflon Goulart Costa · [LinkedIn](https://www.linkedin.com/in/gdaflonpro)
