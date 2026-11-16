@@ -6,7 +6,7 @@ Trabalhos e atividades que desenvolvi no curso de **Sistemas de Informação** d
 
 | Projeto | Disciplina | O que é |
 | --- | --- | --- |
-| [**Lost in the Waves**](https://github.com/GDaflon/lost-in-the-waves) | Programação Orientada a Objetos · G2 | Jogo retrô de surfe em Java Swing, com MVC e WindowBuilder |
+| [**Lost in the Waves**](programacao-orientada-a-objetos/lost-in-the-waves) | Programação Orientada a Objetos · G2 | Jogo retrô de surfe em Java Swing, com MVC e WindowBuilder |
 | [**Saneamento no Brasil (SINISA 2025)**](linguagens-de-programacao/projeto-saneamento-sinisa) | Linguagens de Programação · G2 | Atendimento por redes de água e esgoto em 2024, com ETL, notebook e [artigo publicado](https://gdaflon.github.io/lasalle/projeto-saneamento-sinisa/) · em dupla com Marcella Guimaraes Rodrigues Da Silva |
 | [**Combustíveis no Brasil**](linguagens-de-programacao/projeto-precos-combustiveis) | Linguagens de Programação · G1 | Evolução dos preços e diferenças entre UFs de 2015 a 2024, com notebook, SQLite, dashboard Streamlit e [página do projeto](https://gdaflon.github.io/lasalle/projeto-precos-combustiveis/) |
 
@@ -39,7 +39,7 @@ Professor Alexandre Neves Louzada · Python para análise de dados.
 
 Professor Jota Pê · Java.
 
-- [Lost in the Waves](https://github.com/GDaflon/lost-in-the-waves) — G2: jogo em Java Swing (repositório próprio)
+- [Lost in the Waves](programacao-orientada-a-objetos/lost-in-the-waves) — G2: jogo em Java Swing, MVC e WindowBuilder
 
 ---
 
